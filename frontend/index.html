@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Repository Architecture Navigator — paste a GitHub repo URL and get an interactive architecture map with AI-generated explanations." />
+    <title>RepoNav — Understand any codebase. Instantly.</title>
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+
+    <!-- Google Fonts: Syne (display) + DM Mono (body/code) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              base: 'var(--bg-base)',
+              surface: 'var(--bg-surface)',
+              elevated: 'var(--bg-elevated)',
+              border: 'var(--border)',
+              accent: 'var(--accent)',
+              'accent-glow': 'var(--accent-glow)',
+              'text-primary': 'var(--text-primary)',
+              'text-muted': 'var(--text-muted)',
+              'text-faint': 'var(--text-faint)',
+            },
+            fontFamily: {
+              display: ['Syne', 'sans-serif'],
+              outfit: ['Outfit', 'sans-serif'],
+              mono: ['"DM Mono"', 'monospace'],
+            },
+          },
+        },
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
