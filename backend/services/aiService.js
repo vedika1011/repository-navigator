@@ -17,7 +17,7 @@ async function checkOllamaAvailable() {
     if (res.ok) {
       const data = await res.json()
       const models = data.models?.map(m => m.name) || []
-      const hasModel = models.some(m => m.includes(OLLAMA_MODEL.replace(':latest','')))
+      const hasModel = models.some(m => m.includes(OLLAMA_MODEL.replace(':latest', '')))
       if (hasModel) {
         console.log(`[AIService] ✓ Ollama running — model "${OLLAMA_MODEL}" ready`)
       } else {
@@ -55,18 +55,10 @@ Source code:
 ${content}
 \`\`\`
 
-Write a clear 2-3 sentence summary explaining:
-1. What this file does
-2. What it exports or exposes to the rest of the codebase
-3. Why it matters to the overall architecture
-
-Rules:
-- Write in plain English, avoid jargon
-- Be specific to this actual code, not generic
-- Do not start with "This file"
-- Complete every sentence fully
-- Do not include bullet points or headers
-- Respond with the summary text only, nothing else`
+Write exactly 1-2 sentences explaining what this file does and
+why it matters. Be specific to this actual code. Do not start
+with 'This file'. Complete every sentence. No bullet points.
+Respond with only the summary text, nothing else.`
 }
 
 async function callOllamaAPI(prompt) {
@@ -83,7 +75,7 @@ async function callOllamaAPI(prompt) {
         stream: false,
         options: {
           temperature: 0.3,
-          num_predict: 300,
+          num_predict: 120,
           top_p: 0.9,
           repeat_penalty: 1.1,
         }

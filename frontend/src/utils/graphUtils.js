@@ -22,6 +22,15 @@ export const EDGE_COLORS = {
   extends: "#7ee787",
 };
 
+function getEdgeColor(edgeType) {
+  const EDGE_COLORS = {
+    imports: '#a78bfa',   // violet — matches new accent
+    calls:   '#d2a8ff',   // purple
+    extends: '#7ee787',   // green
+  }
+  return EDGE_COLORS[edgeType] || '#a78bfa'
+}
+
 /**
  * Runs dagre layout on React Flow nodes and edges.
  */
@@ -147,20 +156,19 @@ export function transformGraphData(apiGraph) {
 
   // Map API edges to React Flow edges
   const rfEdges = apiGraph.edges.map((edge) => {
-    const color = EDGE_COLORS[edge.type] || "#8b949e";
     return {
       id: edge.id,
       source: edge.source,
       target: edge.target,
-      type: "default",
+      type: 'default',
       style: {
-        stroke: color,
-        strokeWidth: edge.type === "extends" ? 2 : 1.5,
-        strokeDasharray: edge.type === "calls" ? "6 3" : undefined,
+        stroke: getEdgeColor(edge.type),
+        strokeWidth: 2,
+        strokeOpacity: 0.6,
       },
       markerEnd: {
         type: MarkerType.ArrowClosed,
-        color: color,
+        color: getEdgeColor(edge.type),
         width: 16,
         height: 16,
       },

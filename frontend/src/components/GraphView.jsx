@@ -1,6 +1,6 @@
 // GraphView.jsx — Interactive dependency graph with dagre layout, inspection sidebar, heatmap mode, and onboarding walkthrough.
 
-import { useMemo, useCallback, useState, useEffect } from "react";
+import { useMemo, useCallback, useState, useEffect, useRef } from "react";
 import {
   ReactFlow,
   Background,
@@ -38,24 +38,69 @@ function detectRepoType(nodes, edges) {
 
 // Helper: uses useReactFlow to pan to active node (must be inside ReactFlow context)
 function AutoPanner({ activeNodeId, nodes, isActive }) {
-  const { setCenter } = useReactFlow();
+  const { setCenter, getNodes } = useReactFlow();
 
   useEffect(() => {
     if (!isActive || !activeNodeId) return;
-    const node = nodes.find(n => n.id === activeNodeId);
-    if (!node?.position) return;
-    setCenter(
-      node.position.x + 110,
-      node.position.y + 44,
-      { zoom: 1.2, duration: 600 }
-    );
-  }, [activeNodeId, isActive]);
+
+    // Small delay to ensure React Flow has updated positions
+    const timer = setTimeout(() => {
+      const rfNodes = getNodes();
+      const target = rfNodes.find(n => n.id === activeNodeId);
+      if (!target?.position) {
+        console.warn('[AutoPanner] Node has no position:', activeNodeId);
+        return;
+      }
+
+      console.log('[AutoPanner] Panning to:', activeNodeId, 'position:', target.position);
+
+      const width = target.width || 220;
+      const height = target.height || 80;
+
+      setCenter(
+        target.position.x + width / 2,
+        target.position.y + height / 2,
+        { zoom: 1.1, duration: 700 }
+      );
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [activeNodeId, isActive, getNodes, setCenter]);
+
+  return null;
+}
+
+function FocusController({ onRegisterFocus }) {
+  const { setCenter, getNodes } = useReactFlow();
+
+  useEffect(() => {
+    // Register the focus function so GraphView can call it
+    onRegisterFocus((nodeId) => {
+      const rfNodes = getNodes();
+      const target = rfNodes.find(n => n.id === nodeId);
+      if (!target?.position) return;
+      setCenter(
+        target.position.x + (target.width || 220) / 2,
+        target.position.y + (target.height || 80) / 2,
+        { zoom: 1.2, duration: 500 }
+      );
+    });
+  }, [getNodes, setCenter, onRegisterFocus]);
 
   return null;
 }
 
 function GraphView({ graphData }) {
   const [heatmapMode, setHeatmapMode] = useState(false);
+
+  const focusFnRef = useRef(null);
+  const handleRegisterFocus = useCallback((fn) => {
+    focusFnRef.current = fn;
+  }, []);
+
+  const handleFocusNode = useCallback((nodeId) => {
+    if (focusFnRef.current) focusFnRef.current(nodeId);
+  }, []);
 
   const repoType = graphData
     ? detectRepoType(graphData.graph.nodes, graphData.graph.edges)
@@ -113,11 +158,11 @@ function GraphView({ graphData }) {
       ...n,
       style: {
         ...n.style,
-        opacity: n.id === activeNodeId ? 1 : 0.2,
+        opacity: n.id === activeNodeId ? 1 : 0.25,
         transition: 'opacity 300ms ease',
         filter: n.id === activeNodeId
-          ? 'brightness(1.3) drop-shadow(0 0 8px rgba(126,231,135,0.6))'
-          : 'none',
+          ? 'brightness(1.4) drop-shadow(0 0 16px rgba(126,231,135,0.8)) drop-shadow(0 0 32px rgba(126,231,135,0.3))'
+          : 'grayscale(0.5) brightness(0.5)',
       }
     })));
   }, [onboarding.isOnboardingActive, onboarding.currentStepIndex, setNodes]);
@@ -226,7 +271,7 @@ function GraphView({ graphData }) {
             <button
               onClick={onboarding.isOnboardingActive
                 ? onboarding.stopOnboarding
-                : onboarding.startOnboarding
+                : () => onboarding.startOnboarding(graphData?.graph?.nodes || [])
               }
               style={{
                 background: onboarding.isOnboardingActive
@@ -251,18 +296,42 @@ function GraphView({ graphData }) {
 
         {/* Right side — file count + heatmap */}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div
-            style={{
-              fontFamily: "'DM Mono', monospace",
-              fontSize: 12,
-              color: "var(--text-muted)",
-            }}
-          >
-            {edges.length === 0 ? (
-              <span>{nodes.length} files · no dependencies detected</span>
-            ) : (
-              <span>
-                {nodes.length} files · {edges.length} dependencies
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            fontFamily: "'DM Mono', monospace",
+            fontSize: 12,
+            color: 'var(--text-muted)',
+          }}>
+            <span style={{
+              background: 'rgba(167,139,250,0.1)',
+              border: '1px solid rgba(167,139,250,0.2)',
+              borderRadius: 4,
+              padding: '1px 7px',
+              color: 'var(--accent)',
+              fontSize: 11,
+            }}>
+              {nodes.length} files
+            </span>
+            {edges.length > 0 && (
+              <>
+                <span style={{ color: 'var(--text-faint)' }}>·</span>
+                <span style={{
+                  background: 'rgba(126,231,135,0.08)',
+                  border: '1px solid rgba(126,231,135,0.2)',
+                  borderRadius: 4,
+                  padding: '1px 7px',
+                  color: '#7ee787',
+                  fontSize: 11,
+                }}>
+                  {edges.length} dependencies
+                </span>
+              </>
+            )}
+            {edges.length === 0 && (
+              <span style={{ color: 'var(--text-faint)', fontSize: 11 }}>
+                no dependencies detected
               </span>
             )}
           </div>
@@ -319,10 +388,10 @@ function GraphView({ graphData }) {
       <div
         style={{
           position: "relative",
-          height: "calc(100vh - 280px)",
-          minHeight: 500,
-          maxHeight: 900,
-          background: "#090c10",
+          height: "calc(100vh - 180px)",
+          minHeight: 600,
+          maxHeight: 1200,
+          background: "transparent",
           border: "1px solid #21262d",
           borderRadius: 12,
           overflow: "hidden",
@@ -337,33 +406,42 @@ function GraphView({ graphData }) {
           onNodeClick={handleNodeClick}
           onPaneClick={handleCloseSidebar}
           fitView
-          fitViewOptions={{ padding: 0.2, includeHiddenNodes: false }}
-          defaultViewport={{ x: 0, y: 0, zoom: 0.65 }}
+          fitViewOptions={{ padding: 0.25, includeHiddenNodes: false }}
+          defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
           minZoom={0.15}
           maxZoom={2}
           defaultEdgeOptions={{ type: "default" }}
           proOptions={{ hideAttribution: true }}
         >
-          <Background variant="dots" gap={24} size={1} color="#3d444d" />
+          <Background
+            variant="lines"
+            gap={40}
+            size={1}
+            color="rgba(255,255,255,0.03)"
+          />
           
           <Controls
+            showInteractive={false}
             style={{
-              button: {
-                backgroundColor: "#161b22",
-                border: "1px solid #21262d",
-                color: "#e6edf3",
-              },
+              background: '#161b22',
+              border: '1px solid #30363d',
+              borderRadius: 8,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
             }}
           />
           
           <MiniMap
             nodeColor={miniMapNodeColor}
             style={{
-              background: "#0f1318",
-              border: "1px solid #21262d",
+              background: '#0d1117',
+              border: '1px solid #21262d',
               borderRadius: 8,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
             }}
-            maskColor="rgba(9,12,16,0.7)"
+            maskColor="rgba(9,12,16,0.8)"
+            nodeStrokeWidth={2}
+            pannable
+            zoomable
           />
 
           {(repoType === 'static' || repoType === 'disconnected') && (
@@ -396,6 +474,7 @@ function GraphView({ graphData }) {
             nodes={nodes}
             isActive={onboarding.isOnboardingActive}
           />
+          <FocusController onRegisterFocus={handleRegisterFocus} />
         </ReactFlow>
 
         {/* Inspection sidebar — overlays the graph */}
@@ -436,6 +515,9 @@ function GraphView({ graphData }) {
         isLastStep={onboarding.isLastStep}
         progressPercent={onboarding.progressPercent}
         graphData={graphData}
+        summaries={onboarding.summaries}
+        loadingSummaries={onboarding.loadingSummaries}
+        onFocusNode={handleFocusNode}
       />
     </div>
   );

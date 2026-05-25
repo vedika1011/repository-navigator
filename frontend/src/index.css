@@ -234,3 +234,17 @@ button:active { transform: scale(0.97); }
     display: block !important;
   }
 }
+
+/* ── React Flow hover styles ── */
+
+/* React Flow node hover glow */
+.react-flow__node:hover {
+  filter: brightness(1.15);
+  transition: filter 200ms ease;
+}
+
+/* React Flow edge hover */
+.react-flow__edge:hover .react-flow__edge-path {
+  stroke-opacity: 1 !important;
+  stroke-width: 2.5 !important;
+}

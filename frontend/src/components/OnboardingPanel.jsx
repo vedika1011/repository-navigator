@@ -24,6 +24,9 @@ function OnboardingPanel({
   isLastStep,
   progressPercent,
   graphData,
+  summaries,
+  loadingSummaries,
+  onFocusNode,
 }) {
   // Debug check for varied reasons
   useEffect(() => {
@@ -47,16 +50,20 @@ function OnboardingPanel({
     }
   }
 
-  // A summary is "real" only if it was AI-generated
-  const hasRealSummary = summaryType === 'ai' && 
-    summaryText && 
-    summaryText.length > 30
+
   const typeColor = currentStep ? (NODE_COLORS[currentStep.type] || '#8b949e') : '#8b949e';
 
   // Detect if summary is truncated mid-sentence
   const isTruncated = summaryText &&
     summaryText.length > 0 &&
     !['.', '!', '?'].includes(summaryText.trim().slice(-1));
+
+  // Priority: local summaries from auto-fetch > existing AI summary > nothing
+  const autoFetchedSummary = summaries?.get(currentStep?.nodeId)
+  const existingAISummary = summaryType === 'ai' ? summaryText : null
+  const displaySummary = autoFetchedSummary || existingAISummary
+  const isLoadingThisSummary = loadingSummaries?.has(currentStep?.nodeId)
+  const hasRealSummary = Boolean(displaySummary) && displaySummary.length > 20
 
   return (
     <div
@@ -108,6 +115,36 @@ function OnboardingPanel({
           }}>
             Step {currentStepIndex + 1} of {onboardingPath.length}
           </span>
+          {onFocusNode && currentStep && (
+            <button
+              onClick={() => onFocusNode(currentStep.nodeId)}
+              title="Center graph on this file"
+              style={{
+                background: 'none',
+                border: '1px solid var(--border)',
+                borderRadius: 6,
+                color: 'var(--text-faint)',
+                fontFamily: "'DM Mono', monospace",
+                fontSize: 10,
+                padding: '3px 8px',
+                cursor: 'pointer',
+                transition: 'all 200ms ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.color = 'var(--accent)'
+                e.currentTarget.style.borderColor = 'rgba(167,139,250,0.4)'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.color = 'var(--text-faint)'
+                e.currentTarget.style.borderColor = 'var(--border)'
+              }}
+            >
+              ◎ Focus
+            </button>
+          )}
         </div>
         <button
           onClick={onClose}
@@ -226,68 +263,97 @@ function OnboardingPanel({
           </div>
         )}
 
-        {/* AI Summary block */}
-        {hasRealSummary && (
+        {/* Summary block */}
+        <div style={{
+          background: 'rgba(88,166,255,0.04)',
+          border: `1px solid ${hasRealSummary
+            ? 'rgba(88,166,255,0.15)'
+            : 'rgba(255,255,255,0.04)'}`,
+          borderRadius: 8,
+          padding: '10px 14px',
+          marginBottom: 16,
+          minHeight: 52,
+        }}>
+          {/* Header */}
           <div style={{
-            background: 'rgba(88,166,255,0.04)',
-            border: '1px solid rgba(88,166,255,0.1)',
-            borderRadius: 8,
-            padding: 12,
-            marginBottom: 16,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            marginBottom: hasRealSummary || isLoadingThisSummary ? 6 : 0,
           }}>
+            <span style={{
+              fontFamily: "'DM Mono', monospace",
+              fontSize: 10,
+              color: hasRealSummary
+                ? 'var(--accent)'
+                : 'var(--text-faint)',
+            }}>
+              {hasRealSummary ? '✦ AI Summary' : '✦ Summary'}
+            </span>
+            {(autoFetchedSummary || summaryType === 'ai') && hasRealSummary && (
+              <span style={{
+                fontFamily: "'DM Mono', monospace",
+                fontSize: 9,
+                color: 'var(--accent)',
+                background: 'rgba(167,139,250,0.1)',
+                padding: '1px 5px',
+                borderRadius: 3,
+              }}>
+                AI
+              </span>
+            )}
+          </div>
+
+          {/* Loading state */}
+          {isLoadingThisSummary && !hasRealSummary && (
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 8,
-              marginBottom: 6,
+              gap: 6,
             }}>
+              <span style={{
+                width: 5, height: 5,
+                borderRadius: '50%',
+                background: 'var(--accent)',
+                display: 'inline-block',
+                animation: 'pulse 1s ease-in-out infinite',
+              }} />
               <span style={{
                 fontFamily: "'DM Mono', monospace",
                 fontSize: 11,
                 color: 'var(--text-faint)',
               }}>
-                ✦ AI Summary
-              </span>
-              <span style={{
-                fontFamily: "'DM Mono', monospace",
-                fontSize: 9,
-                color: 'var(--accent)',
-                background: 'rgba(88,166,255,0.1)',
-                padding: '1px 6px',
-                borderRadius: 4,
-              }}>
-                AI
+                Generating summary...
               </span>
             </div>
-            <div style={{ position: 'relative' }}>
-              <div style={{
-                fontFamily: "'DM Mono', monospace",
-                fontSize: 13,
-                color: 'var(--text-muted)',
-                lineHeight: 1.7,
-                maxHeight: 100,
-                overflowY: 'auto',
-              }} className="sidebar-scroll-area">
-                {summaryText}{isTruncated ? '...' : ''}
-              </div>
-            </div>
-          </div>
-        )}
+          )}
 
-        {!hasRealSummary && (
-          <div style={{
-            fontFamily: "'DM Mono', monospace",
-            fontSize: 11,
-            color: 'var(--text-faint)',
-            fontStyle: 'italic',
-            padding: '8px 0',
-            borderTop: '1px solid var(--border)',
-            marginTop: 4,
-            marginBottom: 16,
-          }}>
-            ✦ Open this file in the sidebar to generate an AI summary
-          </div>
-        )}
+          {/* Summary text */}
+          {hasRealSummary && (
+            <p style={{
+              fontFamily: "'DM Mono', monospace",
+              fontSize: 12,
+              color: 'var(--text-muted)',
+              lineHeight: 1.6,
+              margin: 0,
+            }}>
+              {displaySummary}
+            </p>
+          )}
+
+          {/* Empty state — not loading, no summary */}
+          {!hasRealSummary && !isLoadingThisSummary && (
+            <p style={{
+              fontFamily: "'DM Mono', monospace",
+              fontSize: 11,
+              color: 'var(--text-faint)',
+              fontStyle: 'italic',
+              margin: 0,
+            }}>
+              Open this file in the sidebar to generate a summary
+            </p>
+          )}
+        </div>
 
         {/* Step pill navigator */}
         <div style={{

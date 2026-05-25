@@ -102,9 +102,9 @@ function HomePage() {
                   margin: '0 0 36px 0',
                   maxWidth: 480,
                 }}>
-                  Paste a GitHub URL and get an interactive architecture map,
-                  AI-generated file summaries, and a guided onboarding path
-                  in under 60 seconds.
+                  Paste a public repository URL and get an interactive architecture
+                  map, AI-generated file summaries, and a step-by-step onboarding
+                  guide tailored to the codebase.
                 </p>
 
                 <div className="hero-animate-4">

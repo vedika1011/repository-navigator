@@ -51,10 +51,10 @@ function CustomNode({ data, selected }) {
         position: "relative",
         width: dims.width,
         minHeight: dims.height,
-        background: "rgba(22, 27, 34, 0.85)",
+        background: "#1c2128",
         backdropFilter: "blur(8px)",
         WebkitBackdropFilter: "blur(8px)",
-        border: `1px ${borderStyle} rgba(255,255,255,0.06)`,
+        border: `1px ${borderStyle} rgba(255,255,255,0.12)`,
         borderLeft: `3px solid ${activeBorderColor}`,
         borderRadius: 8,
         padding: "12px 14px",
@@ -92,6 +92,18 @@ function CustomNode({ data, selected }) {
         right: 0,
         height: 1,
         background: `linear-gradient(90deg, transparent, ${activeBorderColor}40, transparent)`,
+        pointerEvents: 'none',
+      }} />
+
+      {/* Subtle gradient sheen */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '40%',
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%)',
+        borderRadius: '8px 8px 0 0',
         pointerEvents: 'none',
       }} />
 
@@ -168,7 +180,7 @@ function CustomNode({ data, selected }) {
       <div style={{
         width: "100%",
         height: 4,
-        backgroundColor: "rgba(255,255,255,0.04)",
+        backgroundColor: "rgba(255,255,255,0.08)",
         borderRadius: 2,
         margin: "10px 0"
       }}>
@@ -186,11 +198,12 @@ function CustomNode({ data, selected }) {
           <span
             style={{
               fontFamily: "'DM Mono', monospace",
-              fontSize: 11,
-              color: activeBorderColor,
-              backgroundColor: "#0f1318",
-              padding: "2px 7px",
-              borderRadius: 4,
+              fontSize: 10,
+              color: typeColor,
+              backgroundColor: typeColor + '18',  // 10% opacity
+              border: `1px solid ${typeColor}30`, // 19% opacity border
+              padding: '2px 7px',
+              borderRadius: 5,
               textTransform: "lowercase",
             }}
           >
@@ -216,12 +229,12 @@ function CustomNode({ data, selected }) {
         <span
           style={{
             fontFamily: "'DM Mono', monospace",
-            fontSize: 11,
-            color: data.importance >= 8 ? "var(--accent)" : "#8b949e",
+            fontSize: 10,
+            color: getImportanceBarColor(importance),
             fontWeight: 600,
           }}
         >
-          {data.importance}/10
+          {importance}/10
         </span>
       </div>
 

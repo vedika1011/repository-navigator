@@ -47,6 +47,23 @@ function MiniGraphPreview() {
         pointerEvents: 'none',
       }} />
 
+      {/* PREVIEW badge */}
+      <div style={{
+        position: 'absolute',
+        top: 12,
+        right: 12,
+        fontFamily: "'DM Mono', monospace",
+        fontSize: 9,
+        color: 'var(--text-faint)',
+        background: 'var(--bg-base)',
+        border: '1px solid var(--border)',
+        borderRadius: 4,
+        padding: '2px 6px',
+        letterSpacing: '0.08em',
+      }}>
+        PREVIEW
+      </div>
+
       {/* Header */}
       <div style={{
         display: 'flex',
@@ -69,18 +86,19 @@ function MiniGraphPreview() {
         <span style={{
           fontFamily: "'DM Mono', monospace",
           fontSize: 11,
-          color: '#3d444d',
+          color: 'var(--text-faint)',
           marginLeft: 4,
         }}>
-          expressjs / express
+          your-org / your-repo
         </span>
         <span style={{
           marginLeft: 'auto',
           fontFamily: "'DM Mono', monospace",
           fontSize: 10,
-          color: '#3d444d',
+          color: 'var(--text-faint)',
+          fontStyle: 'italic',
         }}>
-          141 files · 130 deps
+          ← sample preview
         </span>
       </div>
 

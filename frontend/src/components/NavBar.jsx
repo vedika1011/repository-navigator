@@ -1,6 +1,13 @@
 // NavBar.jsx — Sticky top navigation bar with backdrop blur, RepoNav wordmark, and GitHub link.
 
 function NavBar({ isLoading, graphData, onNewAnalysis }) {
+  const lastUrl = sessionStorage.getItem('reponav_last_url') || ''
+  const repoUrl = lastUrl.startsWith('https://github.com/')
+    ? lastUrl.replace(/\.git$/, '')
+    : 'https://github.com'
+
+  const repoLabel = 'View on GitHub '
+
   return (
     <nav
       style={{
@@ -99,15 +106,20 @@ function NavBar({ isLoading, graphData, onNewAnalysis }) {
 
         {/* GitHub link */}
         <a
-          href="https://github.com"
+          href={repoUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 font-mono text-sm transition-colors duration-200"
-          style={{ color: "var(--text-muted)", textDecoration: "none" }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
+          style={{
+            fontFamily: "'DM Mono', monospace",
+            fontSize: 13,
+            color: 'var(--text-muted)',
+            textDecoration: 'none',
+            transition: 'color 200ms ease',
+          }}
+          onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
         >
-          <span>View on GitHub</span>
+          {repoLabel}
           {/* External link icon */}
           <svg
             width="14"

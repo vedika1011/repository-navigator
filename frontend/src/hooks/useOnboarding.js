@@ -5,6 +5,8 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 export default function useOnboarding(onboardingPath) {
   const [isOnboardingActive, setIsOnboardingActive] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [summaries, setSummaries] = useState(new Map())
+  const [loadingSummaries, setLoadingSummaries] = useState(new Set())
 
   const totalSteps = onboardingPath?.length || 0;
 
@@ -19,11 +21,72 @@ export default function useOnboarding(onboardingPath) {
     ? Math.round(((currentStepIndex + 1) / totalSteps) * 100)
     : 0;
 
-  const startOnboarding = useCallback(() => {
+  async function fetchSummariesForPath(onboardingPath, graphNodes) {
+    if (!onboardingPath || onboardingPath.length === 0) return
+    if (!graphNodes || graphNodes.length === 0) return
+
+    // Find nodes in the onboarding path that don't have AI summaries yet
+    const nodesToSummarize = onboardingPath.filter(step => {
+      const node = graphNodes.find(n => n.id === step.nodeId)
+      // Only fetch if no AI summary exists
+      return node && node.summaryType !== 'ai'
+    })
+
+    if (nodesToSummarize.length === 0) return
+
+    console.log(`[useOnboarding] Auto-fetching summaries for ${nodesToSummarize.length} onboarding nodes`)
+
+    // Fetch all summaries concurrently
+    await Promise.allSettled(
+      nodesToSummarize.map(async (step) => {
+        const node = graphNodes.find(n => n.id === step.nodeId)
+        if (!node) return
+
+        // Mark as loading
+        setLoadingSummaries(prev => new Set([...prev, step.nodeId]))
+
+        try {
+          const response = await fetch('http://localhost:3001/summarize', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              nodeId: node.id,
+              absolutePath: node.absolutePath || '',
+              label: node.label,
+              relativePath: node.id,
+              extension: node.label.split('.').pop() || 'js',
+              linesOfCode: node.linesOfCode || 0,
+            }),
+          })
+
+          const data = await response.json()
+
+          if (data.success && data.summary) {
+            setSummaries(prev => new Map([...prev, [step.nodeId, data.summary]]))
+            console.log(`[useOnboarding] ✓ Summary ready: ${node.label}`)
+          }
+        } catch (err) {
+          console.warn(`[useOnboarding] Failed to fetch summary for ${node.label}: ${err.message}`)
+        } finally {
+          setLoadingSummaries(prev => {
+            const next = new Set(prev)
+            next.delete(step.nodeId)
+            return next
+          })
+        }
+      })
+    )
+
+    console.log(`[useOnboarding] All onboarding summaries fetched`)
+  }
+
+  const startOnboarding = useCallback((graphNodes) => {
     if (totalSteps === 0) return;
     setIsOnboardingActive(true);
     setCurrentStepIndex(0);
-  }, [totalSteps]);
+    // Start fetching summaries in background (non-blocking)
+    fetchSummariesForPath(onboardingPath, graphNodes);
+  }, [totalSteps, onboardingPath]);
 
   const stopOnboarding = useCallback(() => {
     setIsOnboardingActive(false);
@@ -80,6 +143,8 @@ export default function useOnboarding(onboardingPath) {
     goToStep,
     isLastStep,
     isFirstStep,
-    progressPercent
+    progressPercent,
+    summaries,
+    loadingSummaries,
   };
 }
