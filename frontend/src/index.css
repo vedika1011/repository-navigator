@@ -1,28 +1,56 @@
 /* Design system tokens and global styles for RepoNav */
 
 :root {
-  --bg-base: #090c10;
-  --bg-surface: #0f1318;
-  --bg-elevated: #161b22;
-  --border: #21262d;
-  
-  --text-primary: #e6edf3;
-  --text-muted: #8b949e;
-  --text-faint: #3d444d;
+  /* Typography hierarchy:
+   * --font-display: Outfit — hero text, major headings
+   * --font-heading: Syne — section titles, card headers,
+   *                        button labels, nav items
+   * --font-mono: DM Mono — file paths, code, numbers,
+   *                        technical labels ONLY
+   * Body text and descriptions: Outfit at regular weight
+   */
+  --font-display: 'Outfit', sans-serif;
+  --font-heading: 'Syne', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --font-body: 'Outfit', sans-serif;
 
-  /* NEW: Violet accent replaces GitHub blue */
-  --accent: #a78bfa;
-  --accent-hover: #c4b5fd;
-  --accent-glow: rgba(167, 139, 250, 0.15);
-  --accent-subtle: rgba(167, 139, 250, 0.08);
+  /* Backgrounds — slightly warmer darks */
+  --bg-base:     #0a0d12;
+  --bg-surface:  #0f1318;
+  --bg-elevated: #161b23;
+  --bg-hover:    #1c2230;
 
-  /* Gradients — updated to violet */
+  /* Borders — subtle */
+  --border:       #1e2530;
+  --border-muted: #161b23;
+
+  /* Text */
+  --text-primary:  #e2e8f0;
+  --text-muted:    #7d8fa3;
+  --text-faint:    #3a4558;
+
+  /* Accent — single violet, used sparingly */
+  --accent:        #7c6af0;
+  --accent-hover:  #9585f5;
+  --accent-subtle: rgba(124, 106, 240, 0.08);
+  --accent-border: rgba(124, 106, 240, 0.2);
+  --accent-glow:   rgba(124, 106, 240, 0.15);
+
+  /* Semantic colors */
+  --success: #4ade80;
+  --warning: #f59e0b;
+  --error:   #f87171;
+  --info:    #60a5fa;
+
+  /* Gradients — minimal */
   --gradient-hero: radial-gradient(
-    ellipse 80% 60% at 50% -10%,
-    rgba(167, 139, 250, 0.15) 0%,
-    transparent 70%
+    ellipse 70% 50% at 50% -5%,
+    rgba(124, 106, 240, 0.10) 0%,
+    transparent 65%
   );
-  --gradient-card: linear-gradient(135deg, #161b22 0%, #0f1318 100%);
+  --gradient-card: linear-gradient(
+    135deg, #161b23 0%, #0f1318 100%
+  );
 }
 
 *,
@@ -40,15 +68,17 @@ html {
 }
 
 body {
-  min-height: 100vh;
-  background-color: var(--bg-base);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.6;
   color: var(--text-primary);
-  font-family: 'DM Mono', monospace;
+  background: var(--bg-base);
+  -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
 
 ::selection {
-  background: rgba(167, 139, 250, 0.2);
+  background: rgba(124, 106, 240, 0.2);
   color: var(--text-primary);
 }
 
@@ -105,12 +135,12 @@ body {
   50% { opacity: 0.4; transform: scale(0.8); }
 }
 
-/* Scan line for preview card */
+/* Reduce scan line on MiniGraphPreview */
 @keyframes scanLine {
-  0% { top: 0; opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { top: 100%; opacity: 0; }
+  0% { top: 60px; opacity: 0; }
+  20% { opacity: 0.4; }
+  80% { opacity: 0.4; }
+  100% { top: 95%; opacity: 0; }
 }
 
 .loading-dot {
@@ -142,11 +172,11 @@ body {
   animation: pulse-dot 2s ease-in-out infinite;
 }
 
-/* Staggered fade in for hero elements */
-.hero-animate-1 { animation: fadeSlideUp 600ms ease both; }
-.hero-animate-2 { animation: fadeSlideUp 600ms ease 100ms both; }
-.hero-animate-3 { animation: fadeSlideUp 600ms ease 200ms both; }
-.hero-animate-4 { animation: fadeSlideUp 600ms ease 300ms both; }
+/* Reduce hero animations — less stagger, shorter duration */
+.hero-animate-1 { animation: fadeSlideUp 400ms ease both; }
+.hero-animate-2 { animation: fadeSlideUp 400ms ease 60ms both; }
+.hero-animate-3 { animation: fadeSlideUp 400ms ease 120ms both; }
+.hero-animate-4 { animation: fadeSlideUp 400ms ease 180ms both; }
 
 .delay-0 { animation-delay: 0ms; }
 .delay-100 { animation-delay: 100ms; }
@@ -190,15 +220,15 @@ button:active { transform: scale(0.97); }
 }
 
 .react-flow__controls button {
-  background-color: #161b22 !important;
-  border: 1px solid #21262d !important;
-  color: #8b949e !important;
-  fill: #8b949e !important;
+  background-color: #161b23 !important;
+  border: 1px solid #1e2530 !important;
+  color: #7d8fa3 !important;
+  fill: #7d8fa3 !important;
 }
 .react-flow__controls button:hover {
-  background-color: #21262d !important;
-  color: #e6edf3 !important;
-  fill: #e6edf3 !important;
+  background-color: #1e2530 !important;
+  color: #e2e8f0 !important;
+  fill: #e2e8f0 !important;
 }
 
 .react-flow__node-customNode {
@@ -235,16 +265,21 @@ button:active { transform: scale(0.97); }
   }
 }
 
-/* ── React Flow hover styles ── */
-
-/* React Flow node hover glow */
-.react-flow__node:hover {
-  filter: brightness(1.15);
-  transition: filter 200ms ease;
-}
-
-/* React Flow edge hover */
+/* Edge hover — brighter on hover */
 .react-flow__edge:hover .react-flow__edge-path {
   stroke-opacity: 1 !important;
-  stroke-width: 2.5 !important;
+  stroke-width: 3px !important;
+  filter: drop-shadow(0 0 4px rgba(124,106,240,0.5));
+}
+
+/* Node hover — subtle lift */
+.react-flow__node:hover {
+  filter: brightness(1.12);
+  transition: filter 200ms ease;
+  z-index: 10 !important;
+}
+
+/* Selected node ring */
+.react-flow__node.selected {
+  filter: brightness(1.2);
 }

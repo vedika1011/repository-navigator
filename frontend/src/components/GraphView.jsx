@@ -19,9 +19,9 @@ import ImportanceLegend from "./ImportanceLegend.jsx";
 import { getHeatmapColor } from "../utils/importanceUtils.js";
 import useOnboarding from "../hooks/useOnboarding.js";
 import OnboardingPanel from "./OnboardingPanel.jsx";
-import useQuery from '../hooks/useQuery.js'
-import QueryBar from './QueryBar.jsx'
-import QueryResultsPanel from './QueryResultsPanel.jsx'
+import DomainSidebar from './DomainSidebar.jsx'
+import DomainDetailCard from './DomainDetailCard.jsx'
+import useDomain from '../hooks/useDomain.js'
 
 // nodeTypes must be defined outside the component to prevent React Flow remount bugs
 const nodeTypes = { customNode: CustomNode };
@@ -36,62 +36,175 @@ function detectRepoType(nodes, edges) {
   return 'normal';
 }
 
-// Helper: uses useReactFlow to pan to active node (must be inside ReactFlow context)
-function AutoPanner({ activeNodeId, nodes, isActive }) {
-  const { setCenter, getNodes } = useReactFlow();
+// Defined OUTSIDE GraphView (prevents remount on re-render)
+function AutoPanner({ activeNodeId, isActive, nodes }) {
+  const { setCenter } = useReactFlow()
+  const prevNodeIdRef = useRef(null)
 
   useEffect(() => {
-    if (!isActive || !activeNodeId) return;
+    if (!isActive || !activeNodeId || !nodes || nodes.length === 0) return
 
-    // Small delay to ensure React Flow has updated positions
-    const timer = setTimeout(() => {
-      const rfNodes = getNodes();
-      const target = rfNodes.find(n => n.id === activeNodeId);
-      if (!target?.position) {
-        console.warn('[AutoPanner] Node has no position:', activeNodeId);
-        return;
-      }
+    // Don't re-pan if same node
+    if (prevNodeIdRef.current === activeNodeId) return
+    prevNodeIdRef.current = activeNodeId
 
-      console.log('[AutoPanner] Panning to:', activeNodeId, 'position:', target.position);
+    const target = nodes.find(n => n.id === activeNodeId)
 
-      const width = target.width || 220;
-      const height = target.height || 80;
+    if (!target) {
+      console.warn('[AutoPanner] Node not found in nodes list:', activeNodeId)
+      return
+    }
 
-      setCenter(
-        target.position.x + width / 2,
-        target.position.y + height / 2,
-        { zoom: 1.1, duration: 700 }
-      );
-    }, 100);
+    if (!target.position || typeof target.position.x !== 'number') {
+      console.warn('[AutoPanner] Node has no position yet:', activeNodeId)
+      return
+    }
 
-    return () => clearTimeout(timer);
-  }, [activeNodeId, isActive, getNodes, setCenter]);
+    // Get node center position deterministically based on importance score
+    const importance = target.data?.importance || 5
+    let nodeWidth = 210
+    if (importance >= 9) nodeWidth = 250
+    else if (importance >= 7) nodeWidth = 230
+    else if (importance >= 5) nodeWidth = 210
+    else if (importance >= 3) nodeWidth = 195
+    else nodeWidth = 180
 
-  return null;
+    const nodeHeight = 80 // Constant height
+
+    const centerX = target.position.x + nodeWidth / 2
+    // Offset centerY by +150px in graph space to push the node UP in viewport space,
+    // ensuring it is fully visible above the bottom onboarding panel.
+    const centerY = target.position.y + nodeHeight / 2 + 150
+
+    console.log(`[AutoPanner] ✓ Panning to: ${activeNodeId} (offset by +150px)`, { centerX, centerY, nodeWidth, nodeHeight })
+
+    setCenter(centerX, centerY, {
+      zoom: 1.1,
+      duration: 700,
+    })
+
+  }, [activeNodeId, isActive, nodes, setCenter])
+
+  return null
 }
 
-function FocusController({ onRegisterFocus }) {
-  const { setCenter, getNodes } = useReactFlow();
+function FocusController({ registerFn, nodes }) {
+  const { setCenter } = useReactFlow()
 
   useEffect(() => {
-    // Register the focus function so GraphView can call it
-    onRegisterFocus((nodeId) => {
-      const rfNodes = getNodes();
-      const target = rfNodes.find(n => n.id === nodeId);
-      if (!target?.position) return;
-      setCenter(
-        target.position.x + (target.width || 220) / 2,
-        target.position.y + (target.height || 80) / 2,
-        { zoom: 1.2, duration: 500 }
-      );
-    });
-  }, [getNodes, setCenter, onRegisterFocus]);
+    registerFn((nodeId) => {
+      if (!nodes || nodes.length === 0) return
+      const target = nodes.find(n => n.id === nodeId)
 
-  return null;
+      if (!target?.position) return
+
+      const importance = target.data?.importance || 5
+      let nodeWidth = 210
+      if (importance >= 9) nodeWidth = 250
+      else if (importance >= 7) nodeWidth = 230
+      else if (importance >= 5) nodeWidth = 210
+      else if (importance >= 3) nodeWidth = 195
+      else nodeWidth = 180
+
+      const nodeHeight = 80
+
+      // Offset centerY by +150px to push the node UP above the onboarding panel
+      setCenter(
+        target.position.x + nodeWidth / 2,
+        target.position.y + nodeHeight / 2 + 150,
+        { zoom: 1.1, duration: 500 }
+      )
+    })
+  }, [nodes, setCenter, registerFn])
+
+  return null
 }
 
-function GraphView({ graphData }) {
+// Defined OUTSIDE GraphView function (prevents remount)
+function DomainPanController({ onRegister, nodes }) {
+  const { setCenter } = useReactFlow()
+
+  useEffect(() => {
+    onRegister((nodeIds) => {
+      if (!nodeIds || nodeIds.length === 0 || !nodes || nodes.length === 0) return
+
+      const targetNodes = nodes.filter(n =>
+        nodeIds.includes(n.id)
+      )
+
+      if (targetNodes.length === 0) return
+
+      // Filter nodes that have valid positions
+      const positioned = targetNodes.filter(
+        n => n.position && typeof n.position.x === 'number'
+      )
+
+      if (positioned.length === 0) return
+
+      // Calculate centroid of all domain nodes
+      const sumX = positioned.reduce((acc, n) => {
+        const importance = n.data?.importance || 5
+        let nodeWidth = 210
+        if (importance >= 9) nodeWidth = 250
+        else if (importance >= 7) nodeWidth = 230
+        else if (importance >= 5) nodeWidth = 210
+        else if (importance >= 3) nodeWidth = 195
+        else nodeWidth = 180
+        return acc + n.position.x + nodeWidth / 2;
+      }, 0)
+
+      const sumY = positioned.reduce((acc, n) => {
+        return acc + n.position.y + 40 // Constant height 80, half is 40
+      }, 0)
+
+      const centerX = sumX / positioned.length
+      const centerY = sumY / positioned.length
+
+      console.log(
+        `[DomainPan] Panning to centroid of ${positioned.length} nodes:`,
+        { centerX, centerY }
+      )
+
+      // Pan to centroid with a zoom level that shows context
+      // Use zoom 0.55 — keeps nodes readable and shows surrounding context without zooming in too far
+      setCenter(centerX, centerY, {
+        zoom: 0.55,
+        duration: 800,
+      })
+    })
+  }, [nodes, setCenter, onRegister])
+
+  return null
+}
+
+function FitOnLoad({ shouldFit }) {
+  const { fitView } = useReactFlow()
+  const hasFit = useRef(false)
+
+  useEffect(() => {
+    if (shouldFit && !hasFit.current) {
+      hasFit.current = true
+      // Longer delay for initial load — React Flow needs
+      // time to calculate all node positions from dagre
+      setTimeout(() => {
+        fitView({
+          padding: 0.15,
+          duration: 800,
+          maxZoom: 1.0,
+          minZoom: 0.2,
+        })
+      }, 400)
+    }
+  }, [shouldFit, fitView])
+
+  return null
+}
+
+function GraphView({ graphData, onboardingIndex, setOnboardingIndex }) {
   const [heatmapMode, setHeatmapMode] = useState(false);
+  const [showEdges, setShowEdges] = useState(true);
+  const [showCrossDomainOnly, setShowCrossDomainOnly] = useState(false);
+  const [showWarningBanner, setShowWarningBanner] = useState(true);
 
   const focusFnRef = useRef(null);
   const handleRegisterFocus = useCallback((fn) => {
@@ -102,14 +215,27 @@ function GraphView({ graphData }) {
     if (focusFnRef.current) focusFnRef.current(nodeId);
   }, []);
 
+  const panToDomainRef = useRef(null)
+
   const repoType = graphData
     ? detectRepoType(graphData.graph.nodes, graphData.graph.edges)
     : null;
 
-  const query = useQuery(graphData)
 
   // Onboarding state
   const onboarding = useOnboarding(graphData?.onboardingPath || []);
+
+  // Coordinate onboarding start and navigation from external clicks (ResultsPlaceholder)
+  useEffect(() => {
+    if (onboardingIndex !== null && onboardingIndex !== undefined) {
+      if (!onboarding.isOnboardingActive) {
+        onboarding.startOnboarding(graphData?.graph?.nodes || []);
+      }
+      onboarding.goToStep(onboardingIndex);
+      // Reset shared index so subsequent clicks can be registered
+      setOnboardingIndex(null);
+    }
+  }, [onboardingIndex, onboarding.isOnboardingActive, onboarding.startOnboarding, onboarding.goToStep, setOnboardingIndex, graphData]);
 
   // Transform API data into React Flow format with dagre layout — memoized for performance
   const { nodes: initialNodes, edges: initialEdges } = useMemo(
@@ -124,6 +250,21 @@ function GraphView({ graphData }) {
   const { selectedNode, isSidebarOpen, selectNode, closeSidebar } =
     useSidebar(graphData);
 
+  const domain = useDomain(graphData?.architectureDomains)
+
+  // Derive visible edges based on toggle
+  const visibleEdges = useMemo(() => {
+    if (!showEdges) return []
+    if (showCrossDomainOnly && domain.isDomainActive) {
+      // Only show edges crossing domain boundary
+      return edges.filter(e =>
+        domain.activeDomainNodeIds?.has(e.source) !==
+        domain.activeDomainNodeIds?.has(e.target)
+      )
+    }
+    return edges
+  }, [edges, showEdges, showCrossDomainOnly, domain])
+
   // Propagate heatmapMode to all nodes
   useEffect(() => {
     setNodes((nds) =>
@@ -137,10 +278,9 @@ function GraphView({ graphData }) {
     );
   }, [heatmapMode, setNodes]);
 
-  // Onboarding mode: highlight current step node, dim all others
+  // Effect 1: highlight nodes when step changes
   useEffect(() => {
     if (!onboarding.isOnboardingActive) {
-      // Reset all nodes to full opacity when exiting onboarding
       setNodes(nds => nds.map(n => ({
         ...n,
         style: {
@@ -149,70 +289,60 @@ function GraphView({ graphData }) {
           transition: 'opacity 300ms ease',
           filter: 'none',
         }
-      })));
-      return;
+      })))
+      return
     }
 
-    const activeNodeId = onboarding.currentStep?.nodeId;
+    const activeNodeId = onboarding.currentStep?.nodeId
     setNodes(nds => nds.map(n => ({
       ...n,
       style: {
         ...n.style,
-        opacity: n.id === activeNodeId ? 1 : 0.25,
+        opacity: n.id === activeNodeId ? 1 : 0.2,
         transition: 'opacity 300ms ease',
         filter: n.id === activeNodeId
           ? 'brightness(1.4) drop-shadow(0 0 16px rgba(126,231,135,0.8)) drop-shadow(0 0 32px rgba(126,231,135,0.3))'
           : 'grayscale(0.5) brightness(0.5)',
       }
-    })));
-  }, [onboarding.isOnboardingActive, onboarding.currentStepIndex, setNodes]);
+    })))
+  }, [
+    onboarding.isOnboardingActive,
+    onboarding.currentStepIndex,
+  ])
 
-  // Query mode overrides onboarding mode
+  // Domain mode: highlight domain nodes, dim others
   useEffect(() => {
-    console.log('[GraphView] Query mode effect fired')
-    console.log('[GraphView] isQueryMode:', query.isQueryMode)
-    console.log('[GraphView] matchedNodeIds:', query.matchedNodeIds)
-    console.log('[GraphView] nodes count:', nodes.length)
+    if (domain.isDomainActive && domain.activeDomainNodeIds) {
+      setNodes(nds => nds.map(n => ({
+        ...n,
+        style: {
+          ...n.style,
+          opacity: domain.activeDomainNodeIds.has(n.id)
+            ? 1 : 0.12,
+          transition: 'opacity 300ms ease',
+          filter: domain.activeDomainNodeIds.has(n.id)
+            ? 'brightness(1.15)' : 'none',
+        }
+      })))
 
-    if (query.isQueryMode && query.matchedNodeIds) {
-      console.log('[GraphView] Applying query highlights...')
-      console.log('[GraphView] Sample node IDs in graph:', nodes.slice(0, 3).map(n => n.id))
-      console.log('[GraphView] Sample matched IDs:', [...(query.matchedNodeIds || [])].slice(0, 3))
-
-      setNodes(nds => {
-        const updated = nds.map(n => ({
-          ...n,
-          style: {
-            ...n.style,
-            opacity: query.matchedNodeIds.has(n.id) ? 1 : 0.15,
-            transition: 'opacity 300ms ease',
-            filter: query.matchedNodeIds.has(n.id)
-              ? 'drop-shadow(0 0 8px rgba(167,139,250,0.7)) brightness(1.2)'
-              : 'none',
-          }
-        }))
-        console.log('[GraphView] Highlighted nodes:', updated.filter(n => n.style.opacity === 1).map(n => n.id))
-        return updated
-      })
+      // Pan to domain centroid after brief delay
+      // for React Flow to register style changes first
+      setTimeout(() => {
+        panToDomainRef.current?.(
+          [...domain.activeDomainNodeIds]
+        )
+      }, 150)
       return
     }
 
-    // Reset when query is cleared
-    if (!query.isQueryMode && !onboarding.isOnboardingActive) {
-      console.log('[GraphView] Resetting node styles')
+    if (!domain.isDomainActive &&
+        !onboarding.isOnboardingActive) {
       setNodes(nds => nds.map(n => ({
         ...n,
         style: { ...n.style, opacity: 1, filter: 'none' }
       })))
     }
-  }, [
-    query.isQueryMode,
-    query.matchedNodeIds,
-    query.queryResults,
-    onboarding.isOnboardingActive,
-    setNodes
-  ])
-
+  }, [domain.isDomainActive, domain.activeDomainNodeIds])
 
   const handleNodeClick = useCallback(
     (_event, node) => {
@@ -243,6 +373,18 @@ function GraphView({ graphData }) {
     );
   }, [closeSidebar, setNodes]);
 
+  const handleDomainSelect = useCallback((domainObj) => {
+    // Clear other modes when selecting a domain
+    if (domainObj) {
+      if (onboarding.isOnboardingActive) {
+        onboarding.stopOnboarding()
+      }
+      if (heatmapMode) setHeatmapMode(false)
+      handleCloseSidebar()
+    }
+    domain.selectDomain(domainObj)
+  }, [onboarding, heatmapMode, domain, handleCloseSidebar])
+
   // MiniMap node coloring function
   const miniMapNodeColor = useCallback((node) => {
     if (heatmapMode) {
@@ -253,6 +395,10 @@ function GraphView({ graphData }) {
 
   const hasOnboardingPath = graphData?.onboardingPath?.length > 0;
   const showOnboardingButton = hasOnboardingPath && repoType === 'normal';
+
+  // Get most recently selected active domain for DetailCard rendering
+  const lastActiveDomainId = Array.from(domain.activeDomains).pop()
+  const activeDomain = graphData?.architectureDomains?.find(d => d.id === lastActiveDomainId) || null
 
   return (
     <div>
@@ -281,7 +427,7 @@ function GraphView({ graphData }) {
                   ? '1px solid #7ee787'
                   : '1px solid rgba(126,231,135,0.3)',
                 color: '#7ee787',
-                fontFamily: "'DM Mono', monospace",
+                fontFamily: "var(--font-mono)",
                 fontSize: 11,
                 padding: '4px 12px',
                 borderRadius: 6,
@@ -294,19 +440,19 @@ function GraphView({ graphData }) {
           )}
         </div>
 
-        {/* Right side — file count + heatmap */}
+        {/* Right side — file count + edges toggle + heatmap */}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: 6,
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "var(--font-mono)",
             fontSize: 12,
             color: 'var(--text-muted)',
           }}>
             <span style={{
-              background: 'rgba(167,139,250,0.1)',
-              border: '1px solid rgba(167,139,250,0.2)',
+              background: 'rgba(124, 106, 240, 0.1)',
+              border: '1px solid rgba(124, 106, 240, 0.2)',
               borderRadius: 4,
               padding: '1px 7px',
               color: 'var(--accent)',
@@ -330,19 +476,55 @@ function GraphView({ graphData }) {
               </>
             )}
             {edges.length === 0 && (
-              <span style={{ color: 'var(--text-faint)', fontSize: 11 }}>
-                no dependencies detected
-              </span>
+              <>
+                <span style={{ color: 'var(--text-faint)' }}>·</span>
+                <span style={{
+                  background: 'rgba(210,153,34,0.08)',
+                  border: '1px solid rgba(210,153,34,0.2)',
+                  borderRadius: 4,
+                  padding: '1px 7px',
+                  color: '#d29922',
+                  fontSize: 11,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                }}>
+                  <span>⚠</span> No dependencies detected
+                </span>
+              </>
             )}
           </div>
           
+          <button
+            onClick={() => setShowEdges(prev => !prev)}
+            style={{
+              background: showEdges
+                ? 'var(--bg-surface)'
+                : 'var(--accent-subtle)',
+              border: `1px solid ${showEdges
+                ? 'var(--border)'
+                : 'var(--accent-border)'}`,
+              borderRadius: 6,
+              color: showEdges
+                ? 'var(--text-muted)'
+                : 'var(--accent)',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 11,
+              padding: '4px 10px',
+              cursor: 'pointer',
+              transition: 'all 200ms ease',
+            }}
+          >
+            {showEdges ? '⌁ Hide Edges' : '⌁ Show Edges'}
+          </button>
+
           <button
             onClick={() => setHeatmapMode((prev) => !prev)}
             style={{
               background: heatmapMode ? "rgba(88,166,255,0.1)" : "var(--bg-surface)",
               border: heatmapMode ? "1px solid #58a6ff" : "1px solid var(--border)",
               color: heatmapMode ? "#58a6ff" : "var(--text-muted)",
-              fontFamily: "'DM Mono', monospace",
+              fontFamily: "var(--font-mono)",
               fontSize: 11,
               padding: "4px 10px",
               borderRadius: 6,
@@ -355,148 +537,178 @@ function GraphView({ graphData }) {
         </div>
       </div>
 
-      {/* Query bar — shown when graph is ready */}
-      <QueryBar
-        queryText={query.queryText}
-        setQueryText={query.setQueryText}
-        onSubmit={query.submitQuery}
-        onClear={query.clearQuery}
-        isQuerying={query.isQuerying}
-        queryError={query.queryError}
-        isQueryMode={query.isQueryMode}
-        resultCount={query.queryResults?.matches?.length || 0}
-      />
 
-      {/* Query results panel */}
-      {query.queryResults && query.queryResults.matches && (
-        <QueryResultsPanel
-          queryResults={query.queryResults}
-          onNodeSelect={(nodeId) => {
-            selectNode(nodeId)
-            query.clearQuery()
-            // Find node position and pan to it
-            const targetNode = nodes.find(n => n.id === nodeId)
-            if (targetNode?.position) {
-              // AutoPanner will handle this via the selectedNode
-            }
-          }}
-          onClose={query.clearQuery}
+      {/* Domain detail card (when domain selected) */}
+      {activeDomain && (
+        <DomainDetailCard
+          domain={activeDomain}
+          onClear={domain.clearDomain}
         />
       )}
 
-      {/* Graph container — position:relative so sidebar can overlay */}
+      {/* Main area: sidebar + graph */}
       <div
         style={{
-          position: "relative",
-          height: "calc(100vh - 180px)",
-          minHeight: 600,
-          maxHeight: 1200,
-          background: "transparent",
-          border: "1px solid #21262d",
+          display: 'flex',
+          gap: 0,
+          height: 'calc(100vh - 160px)',
+          minHeight: 650,
+          maxHeight: 1400,
           borderRadius: 12,
-          overflow: "hidden",
+          overflow: 'hidden',
+          border: '1px solid var(--border)',
         }}
       >
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          nodeTypes={nodeTypes}
-          onNodeClick={handleNodeClick}
-          onPaneClick={handleCloseSidebar}
-          fitView
-          fitViewOptions={{ padding: 0.25, includeHiddenNodes: false }}
-          defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
-          minZoom={0.15}
-          maxZoom={2}
-          defaultEdgeOptions={{ type: "default" }}
-          proOptions={{ hideAttribution: true }}
-        >
-          <Background
-            variant="lines"
-            gap={40}
-            size={1}
-            color="rgba(255,255,255,0.03)"
+        {/* Left: Domain Sidebar */}
+        {graphData?.architectureDomains?.length > 0 && (
+          <DomainSidebar
+            domains={graphData.architectureDomains}
+            activeDomains={domain.activeDomains}
+            onDomainSelect={handleDomainSelect}
+            onClear={domain.clearDomain}
+            graphData={graphData}
           />
-          
-          <Controls
-            showInteractive={false}
-            style={{
-              background: '#161b22',
-              border: '1px solid #30363d',
-              borderRadius: 8,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-            }}
-          />
-          
-          <MiniMap
-            nodeColor={miniMapNodeColor}
-            style={{
-              background: '#0d1117',
-              border: '1px solid #21262d',
-              borderRadius: 8,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-            }}
-            maskColor="rgba(9,12,16,0.8)"
-            nodeStrokeWidth={2}
-            pannable
-            zoomable
-          />
+        )}
 
-          {(repoType === 'static' || repoType === 'disconnected') && (
-            <Panel position="top-center">
-              <div style={{
-                background: 'rgba(15,19,24,0.95)',
-                border: '1px solid rgba(210,153,34,0.4)',
-                borderRadius: '8px',
-                padding: '10px 18px',
-                fontFamily: "'DM Mono', monospace",
-                fontSize: '12px',
-                color: '#d29922',
-                backdropFilter: 'blur(8px)',
-                maxWidth: '480px',
-                textAlign: 'center',
-                lineHeight: 1.5,
-                marginTop: '12px',
-              }}>
-                ⚠ No import connections detected.
-                {repoType === 'static'
-                  ? ' This appears to be a static website or non-modular project. RepoNav works best with projects that use explicit import statements. Supports JS, TS, Python, Java, Go, Rust, Ruby, PHP, C/C++, Swift, Kotlin, Vue and more.'
-                  : ' Files were found but no import relationships could be extracted. The project may use dynamic imports or a non-standard module pattern.'}
-              </div>
-            </Panel>
-          )}
-
-          {/* AutoPanner — must be child of ReactFlow for useReactFlow hook access */}
-          <AutoPanner
-            activeNodeId={onboarding.currentStep?.nodeId}
-            nodes={nodes}
-            isActive={onboarding.isOnboardingActive}
-          />
-          <FocusController onRegisterFocus={handleRegisterFocus} />
-        </ReactFlow>
-
-        {/* Inspection sidebar — overlays the graph */}
-        <InspectionSidebar
-          node={selectedNode}
-          isOpen={isSidebarOpen}
-          onClose={handleCloseSidebar}
-          onNavigate={(nodeId) => {
-             selectNode(nodeId);
-             // When navigating from sidebar, also update opacity highlight
-             setNodes((nds) =>
-               nds.map((n) => ({
-                 ...n,
-                 style: {
-                   ...n.style,
-                   opacity: n.id === nodeId ? 1 : 0.35,
-                 },
-               }))
-             );
+        {/* Right: Graph */}
+        <div
+          style={{
+            flex: 1,
+            position: 'relative',
+            background: '#0d1117',
+            overflow: 'hidden',
           }}
-          graphData={graphData}
-        />
+        >
+          <ReactFlow
+            nodes={nodes}
+            edges={visibleEdges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            nodeTypes={nodeTypes}
+            onNodeClick={handleNodeClick}
+            onPaneClick={handleCloseSidebar}
+            defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
+            minZoom={0.15}
+            maxZoom={2}
+            defaultEdgeOptions={{ type: "default" }}
+            proOptions={{ hideAttribution: true }}
+          >
+            <Background
+              variant="lines"
+              gap={40}
+              size={1}
+              color="rgba(255,255,255,0.03)"
+            />
+            
+            <Controls
+              showInteractive={false}
+              style={{
+                background: '#161b22',
+                border: '1px solid #30363d',
+                borderRadius: 8,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+              }}
+            />
+            
+            <MiniMap
+              nodeColor={miniMapNodeColor}
+              style={{
+                background: '#0d1117',
+                border: '1px solid #21262d',
+                borderRadius: 8,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+              }}
+              maskColor="rgba(9,12,16,0.8)"
+              nodeStrokeWidth={2}
+              pannable
+              zoomable
+            />
+
+            {(repoType === 'static' || repoType === 'disconnected') && showWarningBanner && (
+              <Panel position="bottom-center" style={{ margin: '0 0 20px 0' }}>
+                <div style={{
+                  background: 'rgba(21, 27, 35, 0.95)',
+                  border: '1px solid rgba(210, 153, 34, 0.4)',
+                  borderRadius: '8px',
+                  padding: '10px 14px 10px 18px',
+                  fontFamily: "var(--font-body)",
+                  fontSize: '12px',
+                  color: '#d29922',
+                  backdropFilter: 'blur(8px)',
+                  maxWidth: '520px',
+                  lineHeight: 1.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+                }}>
+                  <div style={{ flex: 1, textAlign: 'left' }}>
+                    <strong style={{ fontFamily: "var(--font-heading)", fontWeight: 600, display: 'block', marginBottom: 2 }}>
+                      ⚠ No import connections detected
+                    </strong>
+                    {repoType === 'static'
+                      ? 'This appears to be a static website or non-modular project. RepoNav works best with projects that use explicit import statements.'
+                      : 'Files were found but no import relationships could be extracted. The project may use dynamic imports or a non-standard module pattern.'}
+                  </div>
+                  <button 
+                    onClick={() => setShowWarningBanner(false)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--text-faint)',
+                      cursor: 'pointer',
+                      fontSize: '18px',
+                      padding: '0 4px',
+                      fontFamily: 'var(--font-heading)',
+                      lineHeight: 1,
+                      transition: 'color 200ms ease',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+                    onMouseLeave={e => e.currentTarget.style.color = 'var(--text-faint)'}
+                  >
+                    ×
+                  </button>
+                </div>
+              </Panel>
+            )}
+
+            {/* AutoPanner — must be child of ReactFlow for useReactFlow hook access */}
+            <AutoPanner
+              activeNodeId={onboarding.currentStep?.nodeId}
+              isActive={onboarding.isOnboardingActive}
+              nodes={nodes}
+            />
+            <FocusController registerFn={handleRegisterFocus} nodes={nodes} />
+            <DomainPanController 
+              onRegister={(fn) => {
+                panToDomainRef.current = fn
+              }} 
+              nodes={nodes}
+            />
+            <FitOnLoad shouldFit={Boolean(graphData)} />
+          </ReactFlow>
+
+          {/* Inspection sidebar — overlays the graph */}
+          <InspectionSidebar
+            node={selectedNode}
+            isOpen={isSidebarOpen}
+            onClose={handleCloseSidebar}
+            onNavigate={(nodeId) => {
+               selectNode(nodeId);
+               // When navigating from sidebar, also update opacity highlight
+               setNodes((nds) =>
+                 nds.map((n) => ({
+                   ...n,
+                   style: {
+                     ...n.style,
+                     opacity: n.id === nodeId ? 1 : 0.35,
+                   },
+                 }))
+               );
+            }}
+            graphData={graphData}
+          />
+        </div>
       </div>
 
       {/* Legend */}

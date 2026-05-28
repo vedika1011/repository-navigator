@@ -204,7 +204,7 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
           {/* File label */}
           <h3
             style={{
-              fontFamily: "'Syne', sans-serif",
+              fontFamily: "var(--font-heading)",
               fontWeight: 700,
               fontSize: 18,
               color: "var(--text-primary)",
@@ -226,8 +226,8 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
           }}>
             {/* File path */}
             <p style={{
-              fontFamily: "'DM Mono', monospace",
-              fontSize: 12,
+              fontFamily: "var(--font-mono)",
+              fontSize: 11,
               color: 'var(--text-muted)',
               margin: 0,
               overflow: 'hidden',
@@ -250,7 +250,7 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 4,
-                  fontFamily: "'DM Mono', monospace",
+                  fontFamily: "var(--font-mono)",
                   fontSize: 10,
                   color: 'var(--text-faint)',
                   textDecoration: 'none',
@@ -264,14 +264,13 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
                 }}
                 onMouseEnter={e => {
                   e.currentTarget.style.color = 'var(--accent)'
-                  e.currentTarget.style.borderColor = 'rgba(167,139,250,0.4)'
+                  e.currentTarget.style.borderColor = 'rgba(124, 106, 240, 0.4)'
                 }}
                 onMouseLeave={e => {
                   e.currentTarget.style.color = 'var(--text-faint)'
                   e.currentTarget.style.borderColor = 'var(--border)'
                 }}
               >
-                {/* GitHub icon SVG */}
                 <svg
                   width="11"
                   height="11"
@@ -290,8 +289,8 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
             {/* Type badge */}
             <span
               style={{
-                fontFamily: "'DM Mono', monospace",
-                fontSize: 11,
+                fontFamily: "var(--font-mono)",
+                fontSize: 10,
                 color: typeColor,
                 backgroundColor: "var(--bg-surface)",
                 padding: "3px 10px",
@@ -305,8 +304,8 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
             {safeData.isOrphaned && (
               <span
                 style={{
-                  fontFamily: "'DM Mono', monospace",
-                  fontSize: 11,
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 10,
                   color: "#d29922",
                   backgroundColor: "rgba(210, 169, 34, 0.12)",
                   padding: "3px 10px",
@@ -330,7 +329,7 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
             >
               <span
                 style={{
-                  fontFamily: "'DM Mono', monospace",
+                  fontFamily: "var(--font-mono)",
                   fontSize: 11,
                   color: "var(--text-muted)",
                 }}
@@ -339,7 +338,7 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
               </span>
               <span
                 style={{
-                  fontFamily: "'DM Mono', monospace",
+                  fontFamily: "var(--font-mono)",
                   fontSize: 11,
                   color: getImportanceColor(safeData.importance),
                   fontWeight: 600,
@@ -384,7 +383,7 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
             {isSummarizing ? (
               <div style={{ padding: '8px 0' }}>
                 <div style={{
-                  fontFamily: "'DM Mono', monospace",
+                  fontFamily: "var(--font-body)",
                   fontSize: 11,
                   color: 'var(--text-faint)',
                   marginBottom: 10,
@@ -395,7 +394,7 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
                   <span style={{
                     width: 6, height: 6,
                     borderRadius: '50%',
-                    background: 'var(--accent, #a78bfa)',
+                    background: 'var(--accent)',
                     display: 'inline-block',
                     animation: 'pulse 1.5s ease-in-out infinite',
                   }} />
@@ -421,7 +420,7 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
                 marginBottom: 8,
               }}>
                 <p style={{
-                  fontFamily: "'DM Mono', monospace",
+                  fontFamily: "var(--font-body)",
                   fontSize: 12,
                   color: '#f78166',
                   margin: '0 0 8px 0',
@@ -436,7 +435,7 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
                     border: '1px solid rgba(247,129,102,0.3)',
                     borderRadius: 6,
                     color: '#f78166',
-                    fontFamily: "'DM Mono', monospace",
+                    fontFamily: "var(--font-heading)",
                     fontSize: 11,
                     padding: '4px 10px',
                     cursor: 'pointer',
@@ -448,12 +447,12 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
             ) : hasRealSummary ? (
               <>
                 <div style={{
-                  borderLeft: '2px solid rgba(126,231,135,0.5)',
+                  borderLeft: '2px solid rgba(124, 106, 240, 0.4)',
                   paddingLeft: 10,
                   marginBottom: 10,
                 }}>
                   <p style={{
-                    fontFamily: "'DM Mono', monospace",
+                    fontFamily: "var(--font-body)",
                     fontSize: 13,
                     color: '#c9d1d9',
                     lineHeight: 1.7,
@@ -468,7 +467,7 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
                   gap: 6,
                 }}>
                   <span style={{
-                    fontFamily: "'DM Mono', monospace",
+                    fontFamily: "var(--font-mono)",
                     fontSize: 10,
                     color: '#7ee787',
                     background: 'rgba(126,231,135,0.1)',
@@ -489,13 +488,12 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
                 gap: 12,
                 textAlign: 'center',
               }}>
-                {/* Icon */}
                 <div style={{
                   width: 36,
                   height: 36,
                   borderRadius: '50%',
-                  background: 'rgba(167,139,250,0.08)',
-                  border: '1px solid rgba(167,139,250,0.2)',
+                  background: 'var(--accent-subtle)',
+                  border: '1px solid var(--accent-border)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -503,10 +501,9 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
                 }}>
                   ✦
                 </div>
-                {/* Message */}
                 <div>
                   <p style={{
-                    fontFamily: "'DM Mono', monospace",
+                    fontFamily: "var(--font-body)",
                     fontSize: 12,
                     color: 'var(--text-muted)',
                     margin: '0 0 4px 0',
@@ -515,7 +512,7 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
                     No summary yet
                   </p>
                   <p style={{
-                    fontFamily: "'DM Mono', monospace",
+                    fontFamily: "var(--font-body)",
                     fontSize: 11,
                     color: 'var(--text-faint)',
                     margin: 0,
@@ -525,29 +522,28 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
                     what this file does
                   </p>
                 </div>
-                {/* Generate button — prominent */}
                 <button
                   onClick={handleRetrySummary}
                   disabled={isSummarizing}
                   style={{
-                    background: 'var(--accent-subtle, rgba(167,139,250,0.08))',
-                    border: '1px solid rgba(167,139,250,0.3)',
+                    background: 'var(--accent-subtle)',
+                    border: '1px solid var(--accent-border)',
                     borderRadius: 8,
-                    color: 'var(--accent, #a78bfa)',
-                    fontFamily: "'DM Mono', monospace",
-                    fontSize: 12,
+                    color: 'var(--accent)',
+                    fontFamily: "var(--font-heading)",
+                    fontSize: 11, // Syne Medium 11px
                     padding: '8px 16px',
                     cursor: 'pointer',
                     transition: 'all 200ms ease',
                     width: '100%',
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.background = 'rgba(167,139,250,0.15)'
-                    e.currentTarget.style.borderColor = 'var(--accent, #a78bfa)'
+                    e.currentTarget.style.background = 'rgba(124, 106, 240, 0.15)'
+                    e.currentTarget.style.borderColor = 'var(--accent)'
                   }}
                   onMouseLeave={e => {
-                    e.currentTarget.style.background = 'var(--accent-subtle, rgba(167,139,250,0.08))'
-                    e.currentTarget.style.borderColor = 'rgba(167,139,250,0.3)'
+                    e.currentTarget.style.background = 'var(--accent-subtle)'
+                    e.currentTarget.style.borderColor = 'var(--accent-border)'
                   }}
                 >
                   ✦ Generate AI Summary
@@ -572,7 +568,7 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
               >
                 <div
                   style={{
-                    fontFamily: "'Syne', sans-serif",
+                    fontFamily: "var(--font-heading)",
                     fontWeight: 700,
                     fontSize: 22,
                     color: "var(--text-primary)",
@@ -582,7 +578,7 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
                 </div>
                 <div
                   style={{
-                    fontFamily: "'DM Mono', monospace",
+                    fontFamily: "var(--font-mono)",
                     fontSize: 10,
                     color: "var(--text-muted)",
                     marginTop: 2,
@@ -605,7 +601,7 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
               >
                 <div
                   style={{
-                    fontFamily: "'Syne', sans-serif",
+                    fontFamily: "var(--font-heading)",
                     fontWeight: 700,
                     fontSize: 22,
                     color: "var(--text-primary)",
@@ -615,7 +611,7 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
                 </div>
                 <div
                   style={{
-                    fontFamily: "'DM Mono', monospace",
+                    fontFamily: "var(--font-mono)",
                     fontSize: 10,
                     color: "var(--text-muted)",
                     marginTop: 2,
@@ -638,7 +634,7 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
               >
                 <div
                   style={{
-                    fontFamily: "'Syne', sans-serif",
+                    fontFamily: "var(--font-heading)",
                     fontWeight: 700,
                     fontSize: 22,
                     color: "var(--text-primary)",
@@ -648,7 +644,7 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
                 </div>
                 <div
                   style={{
-                    fontFamily: "'DM Mono', monospace",
+                    fontFamily: "var(--font-mono)",
                     fontSize: 10,
                     color: "var(--text-muted)",
                     marginTop: 2,
@@ -667,12 +663,11 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
             badge={dependencies.length}
             defaultOpen={true}
           >
-
             {dependencies.length === 0 ? (
               <p
                 style={{
-                  fontFamily: "'DM Mono', monospace",
-                  fontSize: 13,
+                  fontFamily: "var(--font-body)",
+                  fontSize: 12,
                   color: "var(--text-faint)",
                   fontStyle: "italic",
                 }}
@@ -699,13 +694,12 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
             badge={importedBy.length}
             defaultOpen={true}
           >
-
             {importedBy.length === 0 ? (
               <div>
                 <p
                   style={{
-                    fontFamily: "'DM Mono', monospace",
-                    fontSize: 13,
+                    fontFamily: "var(--font-body)",
+                    fontSize: 12,
                     color: "var(--text-faint)",
                     fontStyle: "italic",
                     margin: 0,
@@ -716,7 +710,7 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
                 {safeData.isOrphaned && (
                   <p
                     style={{
-                      fontFamily: "'DM Mono', monospace",
+                      fontFamily: "var(--font-body)",
                       fontSize: 12,
                       color: "#d29922",
                       marginTop: 6,
@@ -752,7 +746,7 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
               >
                 <p
                   style={{
-                    fontFamily: "'Syne', sans-serif",
+                    fontFamily: "var(--font-heading)",
                     fontWeight: 600,
                     fontSize: 13,
                     color: "#7ee787",
@@ -763,7 +757,7 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
                 </p>
                 <p
                   style={{
-                    fontFamily: "'DM Mono', monospace",
+                    fontFamily: "var(--font-body)",
                     fontSize: 13,
                     color: "var(--text-muted)",
                     lineHeight: 1.6,
@@ -781,7 +775,7 @@ function InspectionSidebar({ node, isOpen, onClose, onNavigate, graphData }) {
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: 4,
-                      fontFamily: "'DM Mono', monospace",
+                      fontFamily: "var(--font-mono)",
                       fontSize: 10,
                       color: '#7ee787',
                       textDecoration: 'none',
@@ -847,8 +841,8 @@ function NodeListItem({ node, onClick }) {
       <div style={{ minWidth: 0 }}>
         <div
           style={{
-            fontFamily: "'DM Mono', monospace",
-            fontSize: 13,
+            fontFamily: "var(--font-body)", // Outfit for labels
+            fontSize: 13, // Outfit 13px
             color: "var(--text-primary)",
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -859,7 +853,7 @@ function NodeListItem({ node, onClick }) {
         </div>
         <div
           style={{
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "var(--font-mono)",
             fontSize: 11,
             color: "var(--text-muted)",
           }}

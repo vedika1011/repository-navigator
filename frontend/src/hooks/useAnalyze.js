@@ -25,30 +25,57 @@ function useAnalyze() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [progressMessage, setProgressMessage] = useState('');
+  const [progressPercent, setProgressPercent] = useState(0)
+  const [progressStage, setProgressStage] = useState(0)
 
   async function analyze(repoUrl) {
     setGraphData(null);
     setError(null);
+    setLastRepoUrl(repoUrl);
     setIsLoading(true);
 
-    const messages = [
-      'Cloning repository...',
-      'Scanning source files...',
-      'Extracting import statements...',
-      'Building dependency graph...',
-      'Calculating importance scores...',
-      'Generating AI summaries...',
-      'Almost done...',
-    ];
-    let msgIndex = 0;
-    setProgressMessage(messages[0]);
-    const msgInterval = setInterval(() => {
-      msgIndex = Math.min(msgIndex + 1, messages.length - 1);
-      setProgressMessage(messages[msgIndex]);
-    }, 8000); // advance every 8 seconds
+    const STAGES = [
+      { message: 'Connecting to GitHub...', percent: 3, durationMs: 1500 },
+      { message: 'Cloning repository...', percent: 8, durationMs: 15000 },
+      { message: 'Scanning source files...', percent: 42, durationMs: 2000 },
+      { message: 'Extracting import dependencies...', percent: 57, durationMs: 2000 },
+      { message: 'Building architecture graph...', percent: 66, durationMs: 1500 },
+      { message: 'Analyzing git history...', percent: 73, durationMs: 1500 },
+      { message: 'Running security scan...', percent: 78, durationMs: 2000 },
+      { message: 'Generating AI summaries...', percent: 83, durationMs: 60000 },
+      { message: 'Almost done...', percent: 96, durationMs: 3000 },
+    ]
+
+    let stageIndex = 0
+    setProgressPercent(STAGES[0].percent)
+    setProgressMessage(STAGES[0].message)
+    setProgressStage(0)
+
+    const advanceStage = () => {
+      stageIndex = Math.min(stageIndex + 1, STAGES.length - 1)
+      setProgressStage(stageIndex)
+      setProgressMessage(STAGES[stageIndex].message)
+      // Animate percent smoothly to target
+      setProgressPercent(STAGES[stageIndex].percent)
+    }
+
+    // Schedule stage advances based on estimated durations
+    let elapsed = 0
+    const stageTimers = []
+    STAGES.forEach((stage, i) => {
+      if (i === 0) return // already set
+      elapsed += STAGES[i - 1].durationMs
+      const timer = setTimeout(advanceStage, elapsed)
+      stageTimers.push(timer)
+    })
 
     try {
       const data = await analyzeRepo(repoUrl);
+      // Jump to 100% on success
+      setProgressPercent(100)
+      setProgressMessage('Analysis complete!')
+      await new Promise(resolve => setTimeout(resolve, 600))
+      
       setGraphData(data);
       try {
         sessionStorage.setItem('reponav_last_result', JSON.stringify(data));
@@ -64,13 +91,19 @@ function useAnalyze() {
       console.error("[useAnalyze] Error stack:", err.stack);
       setError(err.message);
     } finally {
-      clearInterval(msgInterval);
-      setProgressMessage('');
+      stageTimers.forEach(clearTimeout)
+      setProgressPercent(0)
+      setProgressStage(0)
+      setProgressMessage('')
       setIsLoading(false);
     }
   }
 
-  return { graphData, isLoading, error, analyze, lastRepoUrl, progressMessage };
+  return {
+    graphData, isLoading, error, analyze,
+    lastRepoUrl, progressMessage,
+    progressPercent, progressStage
+  };
 }
 
 export default useAnalyze;

@@ -14,10 +14,10 @@ async function handleAnalyze(req, res, next) {
     const { repoUrl } = req.body;
     
     // 1. Run the complete pipeline
-    const { rawGraph, meta } = await runAnalysis(repoUrl);
+    const { rawGraph, meta, repoOverview, domains } = await runAnalysis(repoUrl);
     
     // 2. Build, sanitize, and limit the final response payload
-    const response = buildResponse(rawGraph, meta);
+    const response = buildResponse(rawGraph, meta, repoOverview, domains);
     
     // 3. Send successful 200 response
     res.json(response);

@@ -4,6 +4,7 @@ const gitService = require('./gitService');
 const fileScanner = require('./fileScanner');
 const graphBuilder = require('./graphBuilder');
 const summaryOrchestrator = require('./summaryOrchestrator');
+const { summarizeRepository, isAIEnabled } = require('./aiService');
 
 /**
  * Custom error class for pipeline failures.
@@ -67,17 +68,32 @@ async function runAnalysis(repoUrl) {
 
   // 4. Summarize Graph Nodes
   const summarizeStart = Date.now();
-  const AI_MAX_FILES = parseInt(process.env.AI_MAX_FILES || '10');
-  const AI_BATCH_SIZE = parseInt(process.env.AI_BATCH_SIZE || '3');
-
   rawGraph.nodes = await summaryOrchestrator.generateSummaries(
     rawGraph.nodes,
     scannedFiles,
-    AI_MAX_FILES,
-    AI_BATCH_SIZE
+    rawGraph.onboardingPath
   );
   const summarizeDurationMs = Date.now() - summarizeStart;
-  console.log(`[Pipeline] ✓ Summaries (Ollama local AI) complete in ${summarizeDurationMs}ms`);
+  console.log(`[Pipeline] ✓ Summaries (Groq AI) complete in ${summarizeDurationMs}ms`);
+
+  // Generate repository overview
+  let repoOverview = null;
+  if (isAIEnabled()) {
+    try {
+      repoOverview = await summarizeRepository(
+        owner, repo, clonedPath, rawGraph.nodes, rawGraph.edges
+      );
+    } catch (err) {
+      console.warn(`[Pipeline] Repo overview failed: ${err.message}`);
+    }
+  }
+
+  // Step: Domain detection (fast, no AI needed)
+  const { detectDomains } = require('./domainDetector');
+  const domains = detectDomains(rawGraph.nodes);
+  console.log(
+    `[Pipeline] ✓ Detected ${domains.length} architecture domains`
+  );
 
   const totalDurationMs = Date.now() - startTime;
   console.log(`[Pipeline] ✓ Analysis complete in ${totalDurationMs}ms`);
@@ -92,7 +108,9 @@ async function runAnalysis(repoUrl) {
       totalFiles: rawGraph.nodes.length,
       totalEdges: rawGraph.edges.length,
       totalDurationMs
-    }
+    },
+    repoOverview,
+    domains
   };
 }
 

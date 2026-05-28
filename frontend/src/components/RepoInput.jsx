@@ -85,12 +85,14 @@ function RepoInput({ onAnalyze, isLoading, backendError, defaultValue, progressM
             onBlur={() => setIsFocused(false)}
             placeholder="https://github.com/username/repository"
             disabled={isLoading}
-            className="flex-1 px-5 py-3 bg-transparent outline-none font-mono text-sm disabled:opacity-50"
+            className="flex-1 px-5 py-3 bg-transparent outline-none disabled:opacity-50"
             style={{
               color: "var(--text-primary)",
               borderRight: 'none',
               borderRadius: '12px 0 0 12px',
               paddingLeft: 40,
+              fontFamily: "var(--font-body)",
+              fontSize: 14, // Outfit 14px placeholder/input
             }}
             aria-label="GitHub repository URL"
           />
@@ -102,8 +104,9 @@ function RepoInput({ onAnalyze, isLoading, backendError, defaultValue, progressM
             style={{
               backgroundColor: isLoading ? "var(--bg-surface)" : "var(--accent)",
               color: isLoading ? "var(--text-muted)" : "#0d1117",
-              fontFamily: "'Outfit', sans-serif",
+              fontFamily: "var(--font-heading)",
               fontWeight: 600,
+              fontSize: 13, // Syne Medium 13px Analyze button
               width: 160,
               borderRadius: '0 12px 12px 0',
             }}
@@ -145,9 +148,9 @@ function RepoInput({ onAnalyze, isLoading, backendError, defaultValue, progressM
       {displayError && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 6,
-          color: '#f78166',
-          fontFamily: "'DM Mono', monospace",
-          fontSize: 12,
+          color: 'var(--error)',
+          fontFamily: "var(--font-body)",
+          fontSize: 12, // Outfit 12px error text
           marginTop: 8,
           paddingLeft: 12,
         }}>

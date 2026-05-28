@@ -2,11 +2,14 @@
 
 function NavBar({ isLoading, graphData, onNewAnalysis }) {
   const lastUrl = sessionStorage.getItem('reponav_last_url') || ''
-  const repoUrl = lastUrl.startsWith('https://github.com/')
-    ? lastUrl.replace(/\.git$/, '')
-    : 'https://github.com'
-
-  const repoLabel = 'View on GitHub '
+  let repoUrl = 'https://github.com'
+  if (lastUrl) {
+    if (lastUrl.startsWith('http')) {
+      repoUrl = lastUrl.replace(/\.git$/, '');
+    } else {
+      repoUrl = `https://github.com/${lastUrl.replace(/\.git$/, '')}`
+    }
+  }
 
   return (
     <nav
@@ -18,8 +21,11 @@ function NavBar({ isLoading, graphData, onNewAnalysis }) {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "16px 40px",
-        background: "rgba(9,12,16,0.85)",
+        flexWrap: "nowrap",
+        gap: 12,
+        padding: "0 24px",
+        height: 70,
+        background: "rgba(10,13,18,0.85)",
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
         borderBottom: "1px solid var(--border)",
@@ -30,9 +36,9 @@ function NavBar({ isLoading, graphData, onNewAnalysis }) {
         <a
           href="/"
           style={{
-            fontFamily: "'Outfit', sans-serif",
+            fontFamily: "var(--font-heading)",
             fontWeight: 700,
-            fontSize: 18,
+            fontSize: 22,
             color: "var(--accent)",
             textDecoration: "none",
             display: 'flex',
@@ -41,8 +47,8 @@ function NavBar({ isLoading, graphData, onNewAnalysis }) {
         >
           RepoNav
           <span style={{
-            fontFamily: "'DM Mono', monospace",
-            fontSize: 9,
+            fontFamily: "var(--font-mono)",
+            fontSize: 11,
             color: 'var(--text-faint)',
             background: 'var(--bg-elevated)',
             border: '1px solid var(--border)',
@@ -54,17 +60,23 @@ function NavBar({ isLoading, graphData, onNewAnalysis }) {
             v1.0
           </span>
         </a>
+      </div>
 
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        flexShrink: 0,
+      }}>
         {/* Status indicator during analysis */}
         {isLoading && (
           <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: 6,
-            fontFamily: "'DM Mono', monospace",
-            fontSize: 11,
+            fontFamily: "var(--font-body)",
+            fontSize: 12,
             color: 'var(--text-muted)',
-            marginLeft: 8,
           }}>
             <span style={{
               width: 6, height: 6,
@@ -76,25 +88,23 @@ function NavBar({ isLoading, graphData, onNewAnalysis }) {
             Analyzing...
           </div>
         )}
-      </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
         {/* New Analysis button */}
         {graphData && (
           <button
             onClick={onNewAnalysis}
             style={{
               background: 'var(--accent-subtle)',
-              border: '1px solid rgba(167,139,250,0.3)',
+              border: '1px solid var(--accent-border)',
               borderRadius: 8,
               color: 'var(--accent)',
-              fontFamily: "'DM Mono', monospace",
-              fontSize: 11,
+              fontFamily: "var(--font-heading)",
+              fontSize: 12,
               padding: '5px 12px',
               cursor: 'pointer',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(167,139,250,0.15)';
+              e.currentTarget.style.background = 'rgba(124,106,240,0.15)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'var(--accent-subtle)';
@@ -110,30 +120,26 @@ function NavBar({ isLoading, graphData, onNewAnalysis }) {
           target="_blank"
           rel="noopener noreferrer"
           style={{
-            fontFamily: "'DM Mono', monospace",
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 5,
+            fontFamily: "var(--font-body)",
             fontSize: 13,
             color: 'var(--text-muted)',
             textDecoration: 'none',
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
             transition: 'color 200ms ease',
           }}
           onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
           onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
         >
-          {repoLabel}
-          {/* External link icon */}
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
-            <polyline points="15 3 21 3 21 9" />
-            <line x1="10" y1="14" x2="21" y2="3" />
+          View on GitHub
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2">
+            <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
           </svg>
         </a>
       </div>

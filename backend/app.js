@@ -21,6 +21,7 @@ app.get('/health', (req, res) => {
 app.use('/analyze', analyzeRoutes);
 app.use('/summarize', require('./routes/summarize'));
 app.use('/query', require('./routes/query'));
+app.use('/overview', require('./routes/overview'));
 
 // 404 handler for unknown routes
 app.use((req, res) => {

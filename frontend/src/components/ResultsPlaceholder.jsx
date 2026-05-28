@@ -18,7 +18,7 @@ function getWarningDotColor(type) {
   return '#58a6ff';
 }
 
-function ResultsPlaceholder({ graphData, isLoading }) {
+function ResultsPlaceholder({ graphData, isLoading, onSelectStep }) {
   const [showJson, setShowJson] = useState(false);
   const [warningsOpen, setWarningsOpen] = useState(null); // null = auto-decide
   const [copied, setCopied] = useState(false);
@@ -44,8 +44,8 @@ function ResultsPlaceholder({ graphData, isLoading }) {
             style={{ backgroundColor: "var(--accent)" }}
           />
           <span
-            className="font-mono text-sm"
-            style={{ color: "var(--text-muted)" }}
+            className="font-sans text-sm"
+            style={{ color: "var(--text-muted)", fontFamily: "var(--font-body)" }}
           >
             Analyzing repository structure…
           </span>
@@ -120,21 +120,21 @@ function ResultsPlaceholder({ graphData, isLoading }) {
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
           </svg>
           <span style={{
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "var(--font-mono)",
             fontSize: 14,
             color: "var(--text-muted)",
           }}>
             {meta.owner}
           </span>
           <span style={{
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "var(--font-mono)",
             fontSize: 14,
             color: "var(--text-faint)",
           }}>
             /
           </span>
           <span style={{
-            fontFamily: "'Syne', sans-serif",
+            fontFamily: "var(--font-heading)",
             fontWeight: 700,
             fontSize: 20,
             color: "var(--text-primary)",
@@ -157,7 +157,7 @@ function ResultsPlaceholder({ graphData, isLoading }) {
             textAlign: "center",
           }}>
             <div style={{
-              fontFamily: "'Syne', sans-serif",
+              fontFamily: "var(--font-heading)",
               fontWeight: 700,
               fontSize: 28,
               color: "var(--text-primary)",
@@ -166,7 +166,7 @@ function ResultsPlaceholder({ graphData, isLoading }) {
               {meta.totalFiles}
             </div>
             <div style={{
-              fontFamily: "'DM Mono', monospace",
+              fontFamily: "var(--font-mono)",
               fontSize: 10,
               color: "var(--text-faint)",
               marginTop: 2,
@@ -183,7 +183,7 @@ function ResultsPlaceholder({ graphData, isLoading }) {
             textAlign: "center",
           }}>
             <div style={{
-              fontFamily: "'Syne', sans-serif",
+              fontFamily: "var(--font-heading)",
               fontWeight: 700,
               fontSize: 28,
               color: "var(--text-primary)",
@@ -192,7 +192,7 @@ function ResultsPlaceholder({ graphData, isLoading }) {
               {meta.totalEdges}
             </div>
             <div style={{
-              fontFamily: "'DM Mono', monospace",
+              fontFamily: "var(--font-mono)",
               fontSize: 10,
               color: "var(--text-faint)",
               marginTop: 2,
@@ -209,16 +209,16 @@ function ResultsPlaceholder({ graphData, isLoading }) {
             textAlign: "center",
           }}>
             <div style={{
-              fontFamily: "'Syne', sans-serif",
+              fontFamily: "var(--font-heading)",
               fontWeight: 700,
               fontSize: 28,
-              color: orphanCount > 0 ? "#d29922" : "var(--text-muted)",
+              color: orphanCount > 0 ? "var(--warning)" : "var(--text-muted)",
               lineHeight: 1.2,
             }}>
               {orphanCount}
             </div>
             <div style={{
-              fontFamily: "'DM Mono', monospace",
+              fontFamily: "var(--font-mono)",
               fontSize: 10,
               color: "var(--text-faint)",
               marginTop: 2,
@@ -238,7 +238,7 @@ function ResultsPlaceholder({ graphData, isLoading }) {
             justifyContent: "center",
           }}>
             <div style={{
-              fontFamily: "'DM Mono', monospace",
+              fontFamily: "var(--font-mono)",
               fontSize: 10,
               color: "var(--text-faint)",
               marginBottom: 2,
@@ -246,7 +246,7 @@ function ResultsPlaceholder({ graphData, isLoading }) {
               analyzed
             </div>
             <div style={{
-              fontFamily: "'DM Mono', monospace",
+              fontFamily: "var(--font-mono)",
               fontSize: 11,
               color: "var(--text-muted)",
               lineHeight: 1.4,
@@ -259,20 +259,20 @@ function ResultsPlaceholder({ graphData, isLoading }) {
         {/* Informational banner when there are 0 edges */}
         {noEdges && (
           <div style={{
-            background: 'rgba(210,153,34,0.06)',
-            border: '1px solid rgba(210,153,34,0.2)',
+            background: 'var(--accent-subtle)',
+            border: '1px solid var(--accent-border)',
             borderRadius: '8px',
             padding: '10px 14px',
             marginTop: '12px',
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "var(--font-body)",
             fontSize: '12px',
-            color: '#8b949e',
+            color: 'var(--text-muted)',
             lineHeight: 1.6
           }}>
-            <span style={{ color: '#d29922' }}>ℹ</span>{' '}
+            <span style={{ color: 'var(--warning)' }}>ℹ</span>{' '}
             No import relationships detected. This repo may use dynamic imports,
             be a static website, or use a non-standard module pattern.
-            RepoNav works best with projects that use explicit import/include statements. Supported: 20+ languages including JS, TS, Python, Java, Go, and more.
+            RepoNav works best with explicit import statements. Supported: 20+ languages.
           </div>
         )}
       </div>
@@ -302,15 +302,15 @@ function ResultsPlaceholder({ graphData, isLoading }) {
             }}
           >
             <span style={{
-              fontFamily: "'Syne', sans-serif",
+              fontFamily: "var(--font-heading)",
               fontWeight: 500,
               fontSize: 14,
-              color: "#d29922",
+              color: "var(--warning)",
             }}>
               ⚠ Warnings ({warnings.length})
             </span>
             <span style={{
-              fontFamily: "'DM Mono', monospace",
+              fontFamily: "var(--font-mono)",
               fontSize: 11,
               color: "var(--text-faint)",
               transition: "transform 200ms ease",
@@ -344,7 +344,7 @@ function ResultsPlaceholder({ graphData, isLoading }) {
                     marginTop: 5,
                   }} />
                   <span style={{
-                    fontFamily: "'DM Mono', monospace",
+                    fontFamily: "var(--font-body)",
                     fontSize: 12,
                     color: "var(--text-muted)",
                     lineHeight: 1.5,
@@ -357,7 +357,7 @@ function ResultsPlaceholder({ graphData, isLoading }) {
           ) : (
             <div style={{
               padding: "0 16px 12px",
-              fontFamily: "'DM Mono', monospace",
+              fontFamily: "var(--font-body)",
               fontSize: 12,
               color: "var(--text-faint)",
             }}>
@@ -367,12 +367,13 @@ function ResultsPlaceholder({ graphData, isLoading }) {
         </div>
       )}
 
+
       {/* Section 3 — Recommended Reading Order */}
       {onboardingPath && onboardingPath.length > 0 && (
         <div>
           <div style={{ marginBottom: 12 }}>
             <h3 style={{
-              fontFamily: "'Syne', sans-serif",
+              fontFamily: "var(--font-heading)",
               fontWeight: 700,
               fontSize: 16,
               color: "var(--text-primary)",
@@ -381,7 +382,7 @@ function ResultsPlaceholder({ graphData, isLoading }) {
               Recommended Reading Order
             </h3>
             <p style={{
-              fontFamily: "'DM Mono', monospace",
+              fontFamily: "var(--font-body)",
               fontSize: 12,
               color: "var(--text-muted)",
               margin: 0,
@@ -391,7 +392,7 @@ function ResultsPlaceholder({ graphData, isLoading }) {
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {onboardingPath.map((step) => {
+            {onboardingPath.map((step, index) => {
               const stepTypeColor = NODE_COLORS[step.type] || '#58a6ff';
               const truncatedPath = step.nodeId.length > 45 
                 ? step.nodeId.slice(0, 45) + '…' 
@@ -401,6 +402,9 @@ function ResultsPlaceholder({ graphData, isLoading }) {
                 <div
                   key={step.nodeId}
                   onClick={() => {
+                    if (onSelectStep) {
+                      onSelectStep(index);
+                    }
                     const el = document.getElementById("section-graph");
                     if (el) el.scrollIntoView({ behavior: "smooth" });
                   }}
@@ -414,7 +418,7 @@ function ResultsPlaceholder({ graphData, isLoading }) {
                     transition: "border-color 200ms ease",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(88,166,255,0.4)';
+                    e.currentTarget.style.borderColor = 'rgba(124,106,240,0.4)';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.borderColor = 'var(--border)';
@@ -431,7 +435,7 @@ function ResultsPlaceholder({ graphData, isLoading }) {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontFamily: "'Syne', sans-serif",
+                      fontFamily: "var(--font-heading)",
                       fontSize: 11,
                       fontWeight: 700,
                       flexShrink: 0,
@@ -439,7 +443,7 @@ function ResultsPlaceholder({ graphData, isLoading }) {
                       {step.order}
                     </span>
                     <span style={{
-                      fontFamily: "'Syne', sans-serif",
+                      fontFamily: "var(--font-heading)",
                       fontWeight: 500,
                       fontSize: 14,
                       color: "var(--text-primary)",
@@ -450,7 +454,7 @@ function ResultsPlaceholder({ graphData, isLoading }) {
 
                   {/* Row 2: full path */}
                   <div style={{
-                    fontFamily: "'DM Mono', monospace",
+                    fontFamily: "var(--font-mono)",
                     fontSize: 10,
                     color: "var(--text-faint)",
                     marginBottom: 4,
@@ -461,7 +465,7 @@ function ResultsPlaceholder({ graphData, isLoading }) {
 
                   {/* Row 3: reason */}
                   <div style={{
-                    fontFamily: "'DM Mono', monospace",
+                    fontFamily: "var(--font-body)",
                     fontSize: 12,
                     color: "var(--text-muted)",
                     lineHeight: 1.5,
@@ -479,7 +483,7 @@ function ResultsPlaceholder({ graphData, isLoading }) {
       {/* Section 4 — Developer Tools / Raw JSON */}
       <div style={{ marginTop: 8 }}>
         <div style={{
-          fontFamily: "'DM Mono', monospace",
+          fontFamily: "var(--font-mono)",
           fontSize: 11,
           color: "var(--text-faint)",
           marginBottom: 6,
@@ -492,7 +496,7 @@ function ResultsPlaceholder({ graphData, isLoading }) {
             color: "var(--text-faint)",
             background: "none",
             border: "none",
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "var(--font-mono)",
             fontSize: 12,
             cursor: "pointer",
             padding: 0,
@@ -523,7 +527,7 @@ function ResultsPlaceholder({ graphData, isLoading }) {
                 <span
                   style={{
                     marginLeft: 4,
-                    fontFamily: "'DM Mono', monospace",
+                    fontFamily: "var(--font-mono)",
                     fontSize: 11,
                     color: "var(--text-faint)",
                   }}
@@ -540,9 +544,9 @@ function ResultsPlaceholder({ graphData, isLoading }) {
                 position: "absolute",
                 top: 6,
                 right: 8,
-                fontFamily: "'DM Mono', monospace",
+                fontFamily: "var(--font-mono)",
                 fontSize: 10,
-                color: copied ? "#7ee787" : "var(--text-primary)",
+                color: copied ? "var(--success)" : "var(--text-primary)",
                 background: "#161b22",
                 border: "1px solid #21262d",
                 padding: "3px 8px",

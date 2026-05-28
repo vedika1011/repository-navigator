@@ -8,7 +8,7 @@
  * @param {Object} meta - Metadata about the analysis (owner, repo, totalFiles, etc.)
  * @returns {Object} The finalized, safe response object ready to be serialized to JSON
  */
-function buildResponse(rawGraph, meta) {
+function buildResponse(rawGraph, meta, repoOverview, architectureDomains) {
   const MAX_NODES = 500;
   
   let finalNodes = [...rawGraph.nodes];
@@ -81,7 +81,9 @@ function buildResponse(rawGraph, meta) {
       edges: finalEdges
     },
     onboardingPath: rawGraph.onboardingPath,
-    warnings: finalWarnings
+    warnings: finalWarnings,
+    repoOverview: repoOverview || null,
+    architectureDomains: architectureDomains || []
   };
 }
 

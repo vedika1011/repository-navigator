@@ -1,4 +1,4 @@
-// OnboardingPanel.jsx — Redesigned slide-in bottom panel for step-by-step onboarding walkthrough.
+// OnboardingPanel.jsx — slide-in bottom panel for step-by-step onboarding walkthrough.
 
 import { useEffect } from "react";
 
@@ -50,13 +50,7 @@ function OnboardingPanel({
     }
   }
 
-
   const typeColor = currentStep ? (NODE_COLORS[currentStep.type] || '#8b949e') : '#8b949e';
-
-  // Detect if summary is truncated mid-sentence
-  const isTruncated = summaryText &&
-    summaryText.length > 0 &&
-    !['.', '!', '?'].includes(summaryText.trim().slice(-1));
 
   // Priority: local summaries from auto-fetch > existing AI summary > nothing
   const autoFetchedSummary = summaries?.get(currentStep?.nodeId)
@@ -79,10 +73,10 @@ function OnboardingPanel({
         maxHeight: 'min(480px, 60vh)',
         display: 'flex',
         flexDirection: 'column',
-        background: 'linear-gradient(180deg, #161b22 0%, #0d1117 100%)',
-        borderTop: '1px solid #30363d',
-        borderLeft: '1px solid #21262d',
-        borderRight: '1px solid #21262d',
+        background: 'linear-gradient(180deg, #161b23 0%, #0f1318 100%)',
+        borderTop: '1px solid var(--border)',
+        borderLeft: '1px solid var(--border)',
+        borderRight: '1px solid var(--border)',
         borderRadius: '12px 12px 0 0',
         padding: '24px 32px',
         zIndex: 50,
@@ -101,7 +95,7 @@ function OnboardingPanel({
       }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
           <span style={{
-            fontFamily: "'Syne', sans-serif",
+            fontFamily: "var(--font-heading)",
             fontWeight: 700,
             fontSize: 14,
             color: 'var(--text-primary)',
@@ -109,8 +103,8 @@ function OnboardingPanel({
             Onboarding Mode
           </span>
           <span style={{
-            fontFamily: "'DM Mono', monospace",
-            fontSize: 12,
+            fontFamily: "var(--font-mono)",
+            fontSize: 12, // DM Mono 12px
             color: 'var(--text-muted)',
           }}>
             Step {currentStepIndex + 1} of {onboardingPath.length}
@@ -124,7 +118,7 @@ function OnboardingPanel({
                 border: '1px solid var(--border)',
                 borderRadius: 6,
                 color: 'var(--text-faint)',
-                fontFamily: "'DM Mono', monospace",
+                fontFamily: "var(--font-mono)",
                 fontSize: 10,
                 padding: '3px 8px',
                 cursor: 'pointer',
@@ -135,7 +129,7 @@ function OnboardingPanel({
               }}
               onMouseEnter={e => {
                 e.currentTarget.style.color = 'var(--accent)'
-                e.currentTarget.style.borderColor = 'rgba(167,139,250,0.4)'
+                e.currentTarget.style.borderColor = 'rgba(124, 106, 240, 0.4)'
               }}
               onMouseLeave={e => {
                 e.currentTarget.style.color = 'var(--text-faint)'
@@ -193,10 +187,10 @@ function OnboardingPanel({
             {/* File label with inline step number */}
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
               <span style={{
-                fontFamily: "'Syne', sans-serif",
+                fontFamily: "var(--font-heading)",
                 fontWeight: 700,
                 fontSize: 32,
-                color: 'rgba(88,166,255,0.15)',
+                color: 'rgba(124, 106, 240, 0.15)',
                 lineHeight: 1,
                 marginRight: 12,
                 userSelect: 'none',
@@ -204,7 +198,7 @@ function OnboardingPanel({
                 {String(currentStep.order).padStart(2, '0')}
               </span>
               <div style={{
-                fontFamily: "'Syne', sans-serif",
+                fontFamily: "var(--font-heading)",
                 fontWeight: 700,
                 fontSize: 20,
                 color: 'var(--text-primary)',
@@ -213,10 +207,10 @@ function OnboardingPanel({
               </div>
             </div>
 
-            {/* File path */}
+            {/* File path (DM Mono 10px) */}
             <div style={{
-              fontFamily: "'DM Mono', monospace",
-              fontSize: 11,
+              fontFamily: "var(--font-mono)",
+              fontSize: 10,
               color: 'var(--text-faint)',
               marginBottom: 8,
               overflow: 'hidden',
@@ -230,7 +224,7 @@ function OnboardingPanel({
             {/* Type badge + importance row */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
               <span style={{
-                fontFamily: "'DM Mono', monospace",
+                fontFamily: "var(--font-mono)",
                 fontSize: 10,
                 color: typeColor,
                 background: typeColor + '18',
@@ -241,7 +235,7 @@ function OnboardingPanel({
                 {currentStep.type}
               </span>
               <span style={{
-                fontFamily: "'DM Mono', monospace",
+                fontFamily: "var(--font-mono)",
                 fontSize: 11,
                 color: 'var(--text-muted)',
               }}>
@@ -249,12 +243,12 @@ function OnboardingPanel({
               </span>
             </div>
 
-            {/* Reason text with left accent border */}
+            {/* Reason text (Outfit 13px) */}
             <div style={{
-              borderLeft: '3px solid rgba(88,166,255,0.4)',
+              borderLeft: '3px solid rgba(124, 106, 240, 0.4)',
               paddingLeft: 12,
-              fontFamily: "'DM Mono', monospace",
-              fontSize: 14,
+              fontFamily: "var(--font-body)",
+              fontSize: 13,
               color: 'var(--text-muted)',
               lineHeight: 1.7,
             }}>
@@ -265,9 +259,9 @@ function OnboardingPanel({
 
         {/* Summary block */}
         <div style={{
-          background: 'rgba(88,166,255,0.04)',
+          background: 'rgba(124, 106, 240, 0.04)',
           border: `1px solid ${hasRealSummary
-            ? 'rgba(88,166,255,0.15)'
+            ? 'var(--accent-border)'
             : 'rgba(255,255,255,0.04)'}`,
           borderRadius: 8,
           padding: '10px 14px',
@@ -282,7 +276,7 @@ function OnboardingPanel({
             marginBottom: hasRealSummary || isLoadingThisSummary ? 6 : 0,
           }}>
             <span style={{
-              fontFamily: "'DM Mono', monospace",
+              fontFamily: "var(--font-mono)",
               fontSize: 10,
               color: hasRealSummary
                 ? 'var(--accent)'
@@ -292,10 +286,10 @@ function OnboardingPanel({
             </span>
             {(autoFetchedSummary || summaryType === 'ai') && hasRealSummary && (
               <span style={{
-                fontFamily: "'DM Mono', monospace",
+                fontFamily: "var(--font-mono)",
                 fontSize: 9,
                 color: 'var(--accent)',
-                background: 'rgba(167,139,250,0.1)',
+                background: 'var(--accent-subtle)',
                 padding: '1px 5px',
                 borderRadius: 3,
               }}>
@@ -319,7 +313,7 @@ function OnboardingPanel({
                 animation: 'pulse 1s ease-in-out infinite',
               }} />
               <span style={{
-                fontFamily: "'DM Mono', monospace",
+                fontFamily: "var(--font-body)",
                 fontSize: 11,
                 color: 'var(--text-faint)',
               }}>
@@ -328,10 +322,10 @@ function OnboardingPanel({
             </div>
           )}
 
-          {/* Summary text */}
+          {/* Summary text (Outfit 12px) */}
           {hasRealSummary && (
             <p style={{
-              fontFamily: "'DM Mono', monospace",
+              fontFamily: "var(--font-body)",
               fontSize: 12,
               color: 'var(--text-muted)',
               lineHeight: 1.6,
@@ -344,7 +338,7 @@ function OnboardingPanel({
           {/* Empty state — not loading, no summary */}
           {!hasRealSummary && !isLoadingThisSummary && (
             <p style={{
-              fontFamily: "'DM Mono', monospace",
+              fontFamily: "var(--font-body)",
               fontSize: 11,
               color: 'var(--text-faint)',
               fontStyle: 'italic',
@@ -379,7 +373,7 @@ function OnboardingPanel({
                   display: 'flex',
                   alignItems: 'center',
                   gap: 4,
-                  fontFamily: "'DM Mono', monospace",
+                  fontFamily: "var(--font-mono)",
                   fontSize: 10,
                   padding: '4px 10px',
                   borderRadius: 12,
@@ -405,7 +399,7 @@ function OnboardingPanel({
                     width: 5,
                     height: 5,
                     borderRadius: '50%',
-                    background: '#7ee787',
+                    background: 'var(--success)',
                     flexShrink: 0,
                   }} />
                 )}
@@ -432,7 +426,7 @@ function OnboardingPanel({
           onClick={onPrev}
           disabled={isFirstStep}
           style={{
-            fontFamily: "'Syne', sans-serif",
+            fontFamily: "var(--font-heading)",
             fontWeight: 500,
             fontSize: 13,
             padding: '10px 20px',
@@ -453,7 +447,7 @@ function OnboardingPanel({
         <button
           onClick={onClose}
           style={{
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "var(--font-mono)",
             fontSize: 12,
             background: 'none',
             border: 'none',
@@ -472,7 +466,7 @@ function OnboardingPanel({
         <button
           onClick={isLastStep ? onClose : onNext}
           style={{
-            fontFamily: "'Syne', sans-serif",
+            fontFamily: "var(--font-heading)",
             fontWeight: 500,
             fontSize: 13,
             padding: '10px 20px',
@@ -480,7 +474,7 @@ function OnboardingPanel({
             borderRadius: 8,
             border: 'none',
             background: 'var(--accent)',
-            color: '#0d1117',
+            color: '#0a0d12',
             cursor: 'pointer',
             transition: 'all 200ms ease',
           }}

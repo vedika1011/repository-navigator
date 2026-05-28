@@ -2,7 +2,7 @@
 const express = require('express')
 const router = express.Router()
 const fs = require('fs')
-const aiService = require('../services/aiService')
+const { summarizeFile, isAIEnabled } = require('../services/aiService')
 
 router.post('/', async (req, res) => {
   const { nodeId, absolutePath, label, relativePath, extension, linesOfCode } = req.body
@@ -27,34 +27,18 @@ router.post('/', async (req, res) => {
 
   console.log(`[Summarize] Retry request for: ${label}`)
 
-  if (!aiService.isAIEnabled()) {
+  if (!isAIEnabled()) {
     return res.status(200).json({
       success: false,
       error: {
         code: 'AI_DISABLED',
-        message: 'AI summarization is disabled. Set OLLAMA_ENABLED=true in backend/.env and ensure Ollama is running.'
-      }
-    })
-  }
-
-  // Quick ping to see if Ollama is up
-  try {
-    const ping = await fetch('http://localhost:11434/api/tags', {
-      signal: AbortSignal.timeout(2000)
-    })
-    if (!ping.ok) throw new Error('Ollama not responding')
-  } catch {
-    return res.status(200).json({
-      success: false,
-      error: {
-        code: 'OLLAMA_OFFLINE',
-        message: 'Ollama is not running. Start it with: ollama serve'
+        message: 'AI summarization is disabled. Set AI_ENABLED=true and GROQ_API_KEY in backend/.env'
       }
     })
   }
 
   try {
-    const summary = await aiService.summarizeFile({
+    const summary = await summarizeFile({
       absolutePath, label, relativePath, extension, linesOfCode
     })
 

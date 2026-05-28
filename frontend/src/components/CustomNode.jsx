@@ -3,11 +3,8 @@
 import { Handle, Position } from "@xyflow/react";
 import { NODE_COLORS } from "../utils/graphUtils.js";
 import {
-  getNodeDimensions,
   getNodeBorderWidth,
-  getNodeGlow,
   getNodeLabelSize,
-  getImportanceTier,
   getImportanceBarWidth,
   getImportanceBarColor,
   getHeatmapColor
@@ -20,28 +17,38 @@ function CustomNode({ data, selected }) {
   const typeColor = NODE_COLORS[data.type] || "#8b949e";
   const borderColor = data.heatmapMode ? getHeatmapColor(importance) : typeColor;
 
-  const dims = getNodeDimensions(importance);
-  const bw = getNodeBorderWidth(importance);
-  const glow = getNodeGlow(importance);
-  const tier = getImportanceTier(importance);
+  // Custom polished widths:
+  let customWidth = 210; // default medium (5-6)
+  if (importance >= 9) customWidth = 250;
+  else if (importance >= 7) customWidth = 230;
+  else if (importance >= 5) customWidth = 210;
+  else if (importance >= 3) customWidth = 195;
+  else customWidth = 180;
 
   const borderStyle = isOrphaned ? "dashed" : "solid";
   const activeBorderColor = isOrphaned && !data.heatmapMode ? "#d29922" : borderColor;
 
-  let finalBoxShadow = glow;
-  if (selected) {
-    const selectionRing = "0 0 0 2px var(--accent)";
-    finalBoxShadow = glow && glow !== "none" ? `${glow}, ${selectionRing}` : selectionRing;
+  const finalBackground = data.heatmapMode
+    ? `linear-gradient(135deg, #13181f 0%, ${borderColor}0e 100%)`
+    : "#13181f";
+
+  const finalBorder = data.heatmapMode
+    ? `1px ${borderStyle} ${borderColor}33`
+    : `1px ${borderStyle} rgba(255,255,255,0.07)`;
+
+  let finalBoxShadow = 'none';
+  if (data.heatmapMode) {
+    if (importance >= 9) finalBoxShadow = `0 0 16px ${borderColor}25`;
+    else if (importance >= 7) finalBoxShadow = `0 0 10px ${borderColor}14`;
+  } else if (importance >= 9) {
+    finalBoxShadow = `0 0 14px ${borderColor}22`;
   }
 
-  let badgeStyle = null;
-  let badgeText = null;
-  if (tier === "critical") {
-    badgeStyle = { background: "rgba(247,129,102,0.15)", color: "#f78166" };
-    badgeText = "● CRITICAL";
-  } else if (tier === "high") {
-    badgeStyle = { background: "rgba(167,139,250,0.1)", color: "#a78bfa" };
-    badgeText = "● HIGH";
+  if (selected) {
+    const selectionRing = "0 0 0 2px var(--accent)";
+    finalBoxShadow = finalBoxShadow && finalBoxShadow !== "none" 
+      ? `${finalBoxShadow}, ${selectionRing}` 
+      : selectionRing;
   }
 
   return (
@@ -49,12 +56,10 @@ function CustomNode({ data, selected }) {
       className="custom-node-wrapper"
       style={{
         position: "relative",
-        width: dims.width,
-        minHeight: dims.height,
-        background: "#1c2128",
-        backdropFilter: "blur(8px)",
-        WebkitBackdropFilter: "blur(8px)",
-        border: `1px ${borderStyle} rgba(255,255,255,0.12)`,
+        width: customWidth,
+        minHeight: 80,
+        background: finalBackground,
+        border: finalBorder,
         borderLeft: `3px solid ${activeBorderColor}`,
         borderRadius: 8,
         padding: "12px 14px",
@@ -68,9 +73,8 @@ function CustomNode({ data, selected }) {
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = "translateY(-2px)";
         e.currentTarget.style.borderLeftColor = activeBorderColor;
-        if (tier === "critical" || tier === "high") {
-          e.currentTarget.style.boxShadow =
-            "0 0 16px var(--accent-glow), 0 0 32px var(--accent-glow)";
+        if (importance >= 9) {
+          e.currentTarget.style.boxShadow = `0 0 16px ${borderColor}33, 0 0 32px ${borderColor}11`;
         }
         e.currentTarget.querySelectorAll(".react-flow__handle").forEach((h) => {
           h.style.opacity = "1";
@@ -85,6 +89,7 @@ function CustomNode({ data, selected }) {
         });
       }}
     >
+      {/* Top accent highlight */}
       <div style={{
         position: 'absolute',
         top: 0,
@@ -95,44 +100,15 @@ function CustomNode({ data, selected }) {
         pointerEvents: 'none',
       }} />
 
-      {/* Subtle gradient sheen */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '40%',
-        background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%)',
-        borderRadius: '8px 8px 0 0',
-        pointerEvents: 'none',
-      }} />
-
-      {badgeText && (
-        <span
-          style={{
-            position: "absolute",
-            top: 8,
-            right: 8,
-            fontFamily: "'DM Mono', monospace",
-            fontSize: 9,
-            padding: "2px 6px",
-            borderRadius: 4,
-            ...badgeStyle
-          }}
-        >
-          {badgeText}
-        </span>
-      )}
-
-      {!badgeText && data.extension && (
+      {data.extension && (
         <span
           style={{
             position: "absolute",
             top: 6,
             right: 8,
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "var(--font-mono)",
             fontSize: 10,
-            color: "#3d444d",
+            color: "var(--text-faint)",
           }}
         >
           {data.extension}
@@ -152,7 +128,7 @@ function CustomNode({ data, selected }) {
         }}
       />
 
-      <div style={{ display: "flex", alignItems: "center", gap: 8, paddingRight: badgeText ? 60 : 20, marginTop: 4 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, paddingRight: 32, marginTop: 4 }}>
         <span
           style={{
             width: 8,
@@ -164,9 +140,9 @@ function CustomNode({ data, selected }) {
         />
         <span
           style={{
-            fontFamily: "'Syne', sans-serif",
+            fontFamily: "var(--font-heading)",
             fontSize: getNodeLabelSize(importance),
-            color: "#e6edf3",
+            color: "var(--text-primary)",
             fontWeight: 700,
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -177,18 +153,19 @@ function CustomNode({ data, selected }) {
         </span>
       </div>
 
+      {/* Clean importance progress bar (3px height) */}
       <div style={{
         width: "100%",
-        height: 4,
+        height: 3,
         backgroundColor: "rgba(255,255,255,0.08)",
-        borderRadius: 2,
+        borderRadius: 1.5,
         margin: "10px 0"
       }}>
         <div style={{
           width: getImportanceBarWidth(importance),
-          height: 4,
+          height: 3,
           backgroundColor: getImportanceBarColor(importance),
-          borderRadius: 2,
+          borderRadius: 1.5,
           transition: "width 800ms ease"
         }} />
       </div>
@@ -197,11 +174,11 @@ function CustomNode({ data, selected }) {
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <span
             style={{
-              fontFamily: "'DM Mono', monospace",
+              fontFamily: "var(--font-mono)",
               fontSize: 10,
               color: typeColor,
-              backgroundColor: typeColor + '18',  // 10% opacity
-              border: `1px solid ${typeColor}30`, // 19% opacity border
+              backgroundColor: typeColor + '18',
+              border: `1px solid ${typeColor}30`,
               padding: '2px 7px',
               borderRadius: 5,
               textTransform: "lowercase",
@@ -213,8 +190,8 @@ function CustomNode({ data, selected }) {
           {isOrphaned && (
             <span
               style={{
-                fontFamily: "'DM Mono', monospace",
-                fontSize: 11,
+                fontFamily: "var(--font-mono)",
+                fontSize: 10,
                 color: "#d29922",
                 backgroundColor: "rgba(210, 169, 34, 0.12)",
                 padding: "2px 7px",
@@ -228,7 +205,7 @@ function CustomNode({ data, selected }) {
 
         <span
           style={{
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "var(--font-mono)",
             fontSize: 10,
             color: getImportanceBarColor(importance),
             fontWeight: 600,

@@ -1,6 +1,6 @@
 // HomePage.jsx — Full page layout with loading state, graph visualization, and analysis summary.
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import BackgroundCanvas from "./BackgroundCanvas.jsx";
 import NavBar from "./NavBar.jsx";
 import RepoInput from "./RepoInput.jsx";
@@ -9,9 +9,19 @@ import ResultsPlaceholder from "./ResultsPlaceholder.jsx";
 import GraphView from "./GraphView.jsx";
 import MiniGraphPreview from "./MiniGraphPreview.jsx";
 import useAnalyze from "../hooks/useAnalyze.js";
+import RepoOverview from './RepoOverview.jsx';
+import useRepoOverview from '../hooks/useRepoOverview.js';
+import AnalysisLoader from './AnalysisLoader.jsx';
 
 function HomePage() {
-  const { graphData, isLoading, error, analyze, lastRepoUrl, progressMessage } = useAnalyze();
+  const { 
+    graphData, isLoading, error, analyze, 
+    lastRepoUrl, progressMessage, 
+    progressPercent, progressStage 
+  } = useAnalyze();
+
+  const { isGenerating, generateOverview } = useRepoOverview(graphData);
+  const [onboardingIndex, setOnboardingIndex] = useState(null);
 
   const handlePillClick = useCallback((targetId) => {
     const el = document.getElementById(targetId);
@@ -26,7 +36,7 @@ function HomePage() {
 
   return (
     <div className="relative min-h-screen">
-      <BackgroundCanvas />
+      {!graphData && <BackgroundCanvas />}
 
       <div className="relative z-10">
         <NavBar isLoading={isLoading} graphData={graphData} onNewAnalysis={handleNewAnalysis} />
@@ -140,39 +150,25 @@ function HomePage() {
 
           {/* Loading state */}
           {isLoading && !graphData && (
-            <div className="max-w-2xl mx-auto mt-24 px-5">
-              <div
-                style={{
-                  backgroundColor: "var(--bg-elevated)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 12,
-                  padding: "48px 32px",
-                  textAlign: "center",
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 16 }}>
-                  <span className="loading-dot" />
-                  <span className="loading-dot" />
-                  <span className="loading-dot" />
-                </div>
-                <div
-                  style={{
-                    fontFamily: "'DM Mono', monospace",
-                    fontSize: 13,
-                    color: "var(--text-muted)",
-                  }}
-                >
-                  {progressMessage || 'Cloning repository and analyzing dependencies...'}
-                </div>
-              </div>
-            </div>
+            <AnalysisLoader
+              repoUrl={lastRepoUrl}
+              progressPercent={progressPercent}
+              progressStage={progressStage}
+              progressMessage={progressMessage}
+            />
           )}
 
           {/* Post-analysis layout (Single column) */}
           {graphData && (
             <div className="px-5 pt-12">
               <div className="max-w-6xl mx-auto">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5">
+                <RepoOverview 
+                  graphData={graphData} 
+                  onGenerateOverview={generateOverview} 
+                  isGenerating={isGenerating} 
+                />
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 mt-8">
                   <h2
                     className="font-display font-bold text-xl"
                     style={{ color: "var(--text-primary)" }}
@@ -183,7 +179,11 @@ function HomePage() {
                 </div>
                 
                 <div id="section-graph" className="animate-fade-in-up">
-                  <GraphView graphData={graphData} />
+                  <GraphView 
+                    graphData={graphData} 
+                    onboardingIndex={onboardingIndex}
+                    setOnboardingIndex={setOnboardingIndex}
+                  />
                 </div>
               </div>
 
@@ -195,7 +195,11 @@ function HomePage() {
                   >
                     Analysis Summary
                   </h2>
-                  <ResultsPlaceholder graphData={graphData} isLoading={isLoading} />
+                  <ResultsPlaceholder 
+                    graphData={graphData} 
+                    isLoading={isLoading} 
+                    onSelectStep={setOnboardingIndex}
+                  />
                 </div>
               </div>
             </div>

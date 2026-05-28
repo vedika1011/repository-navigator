@@ -17,7 +17,7 @@ function BackgroundCanvas() {
 
     // Node colors matching the app's type system
     const NODE_COLORS = [
-      '#a78bfa', // violet (accent)
+      '#7c6af0', // accent violet
       '#58a6ff', // blue
       '#7ee787', // green
       '#d2a8ff', // purple
@@ -25,21 +25,21 @@ function BackgroundCanvas() {
       '#79c0ff', // light blue
     ]
 
-    // Create floating nodes
-    const NODE_COUNT = 28
+    // Create floating nodes — simplified for reduced noise
+    const NODE_COUNT = 18
     const nodes = Array.from({ length: NODE_COUNT }, (_, i) => ({
       x: Math.random() * width,
       y: Math.random() * height,
-      vx: (Math.random() - 0.5) * 0.4,
-      vy: (Math.random() - 0.5) * 0.4,
+      vx: (Math.random() - 0.5) * 0.2, // slower velocity (0.2)
+      vy: (Math.random() - 0.5) * 0.2, // slower velocity (0.2)
       radius: Math.random() * 3 + 2,
       color: NODE_COLORS[Math.floor(Math.random() * NODE_COLORS.length)],
-      opacity: Math.random() * 0.4 + 0.1,
+      opacity: Math.random() * 0.14 + 0.06, // reduced node opacity (0.06 to 0.2)
       pulsePhase: Math.random() * Math.PI * 2,
     }))
 
     // Create edges between nearby nodes
-    const MAX_EDGE_DISTANCE = 180
+    const MAX_EDGE_DISTANCE = 145 // reduced distance
 
     function draw() {
       ctx.clearRect(0, 0, width, height)
@@ -52,11 +52,11 @@ function BackgroundCanvas() {
           const dist = Math.sqrt(dx * dx + dy * dy)
 
           if (dist < MAX_EDGE_DISTANCE) {
-            const edgeOpacity = (1 - dist / MAX_EDGE_DISTANCE) * 0.12
+            const edgeOpacity = (1 - dist / MAX_EDGE_DISTANCE) * 0.06 // reduced opacity factor (0.06)
             ctx.beginPath()
             ctx.moveTo(nodes[i].x, nodes[i].y)
             ctx.lineTo(nodes[j].x, nodes[j].y)
-            ctx.strokeStyle = `rgba(167, 139, 250, ${edgeOpacity})`
+            ctx.strokeStyle = `rgba(124, 106, 240, ${edgeOpacity})`
             ctx.lineWidth = 1
             ctx.stroke()
           }
@@ -135,7 +135,7 @@ function BackgroundCanvas() {
         height: '100%',
         pointerEvents: 'none',
         zIndex: 0,
-        opacity: 0.6,
+        opacity: 0.25, // reduced container opacity to 0.25
       }}
     />
   )
