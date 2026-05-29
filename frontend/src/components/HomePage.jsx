@@ -168,13 +168,7 @@ function HomePage() {
                   isGenerating={isGenerating} 
                 />
 
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 mt-8">
-                  <h2
-                    className="font-display font-bold text-xl"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    Architecture Graph
-                  </h2>
+                <div className="flex justify-end mb-4 mt-6">
                   <FeaturePills active={true} onPillClick={handlePillClick} />
                 </div>
                 

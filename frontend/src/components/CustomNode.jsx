@@ -7,7 +7,8 @@ import {
   getNodeLabelSize,
   getImportanceBarWidth,
   getImportanceBarColor,
-  getHeatmapColor
+  getHeatmapColor,
+  getNodeDimensions
 } from "../utils/importanceUtils.js";
 
 function CustomNode({ data, selected }) {
@@ -17,29 +18,23 @@ function CustomNode({ data, selected }) {
   const typeColor = NODE_COLORS[data.type] || "#8b949e";
   const borderColor = data.heatmapMode ? getHeatmapColor(importance) : typeColor;
 
-  // Custom polished widths:
-  let customWidth = 210; // default medium (5-6)
-  if (importance >= 9) customWidth = 250;
-  else if (importance >= 7) customWidth = 230;
-  else if (importance >= 5) customWidth = 210;
-  else if (importance >= 3) customWidth = 195;
-  else customWidth = 180;
+  const { width: customWidth } = getNodeDimensions(importance);
 
   const borderStyle = isOrphaned ? "dashed" : "solid";
   const activeBorderColor = isOrphaned && !data.heatmapMode ? "#d29922" : borderColor;
 
   const finalBackground = data.heatmapMode
-    ? `linear-gradient(135deg, #13181f 0%, ${borderColor}0e 100%)`
+    ? `linear-gradient(135deg, #13181f 0%, ${borderColor}2a 100%)`
     : "#13181f";
 
   const finalBorder = data.heatmapMode
-    ? `1px ${borderStyle} ${borderColor}33`
+    ? `1px ${borderStyle} ${borderColor}77`
     : `1px ${borderStyle} rgba(255,255,255,0.07)`;
 
   let finalBoxShadow = 'none';
   if (data.heatmapMode) {
-    if (importance >= 9) finalBoxShadow = `0 0 16px ${borderColor}25`;
-    else if (importance >= 7) finalBoxShadow = `0 0 10px ${borderColor}14`;
+    if (importance >= 9) finalBoxShadow = `0 0 16px ${borderColor}55`;
+    else if (importance >= 7) finalBoxShadow = `0 0 10px ${borderColor}44`;
   } else if (importance >= 9) {
     finalBoxShadow = `0 0 14px ${borderColor}22`;
   }
@@ -141,7 +136,7 @@ function CustomNode({ data, selected }) {
         <span
           style={{
             fontFamily: "var(--font-heading)",
-            fontSize: getNodeLabelSize(importance),
+            fontSize: Math.max(14, getNodeLabelSize(importance)),
             color: "var(--text-primary)",
             fontWeight: 700,
             overflow: "hidden",
@@ -175,7 +170,7 @@ function CustomNode({ data, selected }) {
           <span
             style={{
               fontFamily: "var(--font-mono)",
-              fontSize: 10,
+              fontSize: 11,
               color: typeColor,
               backgroundColor: typeColor + '18',
               border: `1px solid ${typeColor}30`,
@@ -191,7 +186,7 @@ function CustomNode({ data, selected }) {
             <span
               style={{
                 fontFamily: "var(--font-mono)",
-                fontSize: 10,
+                fontSize: 11,
                 color: "#d29922",
                 backgroundColor: "rgba(210, 169, 34, 0.12)",
                 padding: "2px 7px",
@@ -206,7 +201,7 @@ function CustomNode({ data, selected }) {
         <span
           style={{
             fontFamily: "var(--font-mono)",
-            fontSize: 10,
+            fontSize: 11,
             color: getImportanceBarColor(importance),
             fontWeight: 600,
           }}

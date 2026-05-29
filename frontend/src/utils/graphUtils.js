@@ -39,11 +39,11 @@ function applyDagreLayout(nodes, edges) {
   g.setDefaultEdgeLabel(() => ({}));
   
   g.setGraph({ 
-    rankdir: 'LR',
-    nodesep: 150,
-    ranksep: 200,
-    marginx: 80,
-    marginy: 80
+    rankdir: 'TB',
+    nodesep: 90,
+    ranksep: 130,
+    marginx: 60,
+    marginy: 60
   });
 
   nodes.forEach((node) => {

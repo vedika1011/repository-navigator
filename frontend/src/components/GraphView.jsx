@@ -46,7 +46,6 @@ function AutoPanner({ activeNodeId, isActive, nodes }) {
 
     // Don't re-pan if same node
     if (prevNodeIdRef.current === activeNodeId) return
-    prevNodeIdRef.current = activeNodeId
 
     const target = nodes.find(n => n.id === activeNodeId)
 
@@ -83,6 +82,7 @@ function AutoPanner({ activeNodeId, isActive, nodes }) {
       duration: 700,
     })
 
+    prevNodeIdRef.current = activeNodeId
   }, [activeNodeId, isActive, nodes, setCenter])
 
   return null
@@ -141,34 +141,53 @@ function DomainPanController({ onRegister, nodes }) {
 
       if (positioned.length === 0) return
 
-      // Calculate centroid of all domain nodes
-      const sumX = positioned.reduce((acc, n) => {
-        const importance = n.data?.importance || 5
-        let nodeWidth = 210
-        if (importance >= 9) nodeWidth = 250
-        else if (importance >= 7) nodeWidth = 230
-        else if (importance >= 5) nodeWidth = 210
-        else if (importance >= 3) nodeWidth = 195
-        else nodeWidth = 180
-        return acc + n.position.x + nodeWidth / 2;
-      }, 0)
+      // Calculate weighted centroid and spread
+      const { sumX, sumY, totalWeight, minX, maxX, minY, maxY } = positioned.reduce(
+        (acc, n) => {
+          const importance = n.data?.importance || 5
+          let nodeWidth = 210
+          if (importance >= 9) nodeWidth = 250
+          else if (importance >= 7) nodeWidth = 230
+          else if (importance >= 5) nodeWidth = 210
+          else if (importance >= 3) nodeWidth = 195
+          else nodeWidth = 180
+          
+          const centerX = n.position.x + nodeWidth / 2
+          const centerY = n.position.y + 40
+          
+          // Weight calculation: importance^2 ensures highly important nodes dominate the center
+          const weight = Math.pow(importance, 2)
+          
+          return {
+            sumX: acc.sumX + (centerX * weight),
+            sumY: acc.sumY + (centerY * weight),
+            totalWeight: acc.totalWeight + weight,
+            minX: Math.min(acc.minX, centerX),
+            maxX: Math.max(acc.maxX, centerX),
+            minY: Math.min(acc.minY, centerY),
+            maxY: Math.max(acc.maxY, centerY)
+          }
+        },
+        { sumX: 0, sumY: 0, totalWeight: 0, minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity }
+      )
 
-      const sumY = positioned.reduce((acc, n) => {
-        return acc + n.position.y + 40 // Constant height 80, half is 40
-      }, 0)
-
-      const centerX = sumX / positioned.length
-      const centerY = sumY / positioned.length
+      const centerX = sumX / totalWeight
+      const centerY = sumY / totalWeight
+      
+      const spread = Math.max(maxX - minX, maxY - minY)
+      
+      let zoom = 0.8
+      if (spread > 2000) zoom = 0.4
+      else if (spread > 1000) zoom = 0.6
+      else if (spread < 200) zoom = 1.1
 
       console.log(
         `[DomainPan] Panning to centroid of ${positioned.length} nodes:`,
-        { centerX, centerY }
+        { centerX, centerY, spread, zoom }
       )
 
-      // Pan to centroid with a zoom level that shows context
-      // Use zoom 0.55 — keeps nodes readable and shows surrounding context without zooming in too far
       setCenter(centerX, centerY, {
-        zoom: 0.55,
+        zoom,
         duration: 800,
       })
     })
@@ -188,7 +207,7 @@ function FitOnLoad({ shouldFit }) {
       // time to calculate all node positions from dagre
       setTimeout(() => {
         fitView({
-          padding: 0.15,
+          padding: 0.12,
           duration: 800,
           maxZoom: 1.0,
           minZoom: 0.2,
@@ -587,7 +606,7 @@ function GraphView({ graphData, onboardingIndex, setOnboardingIndex }) {
             nodeTypes={nodeTypes}
             onNodeClick={handleNodeClick}
             onPaneClick={handleCloseSidebar}
-            defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
+            defaultViewport={{ x: 0, y: 0, zoom: 0.9 }}
             minZoom={0.15}
             maxZoom={2}
             defaultEdgeOptions={{ type: "default" }}
@@ -625,22 +644,22 @@ function GraphView({ graphData, onboardingIndex, setOnboardingIndex }) {
             />
 
             {(repoType === 'static' || repoType === 'disconnected') && showWarningBanner && (
-              <Panel position="bottom-center" style={{ margin: '0 0 20px 0' }}>
+              <Panel position="top-right" style={{ margin: '20px 20px 0 0', zIndex: 10 }}>
                 <div style={{
                   background: 'rgba(21, 27, 35, 0.95)',
                   border: '1px solid rgba(210, 153, 34, 0.4)',
-                  borderRadius: '8px',
-                  padding: '10px 14px 10px 18px',
+                  borderRadius: '6px',
+                  padding: '8px 12px',
                   fontFamily: "var(--font-body)",
-                  fontSize: '12px',
+                  fontSize: '11px',
                   color: '#d29922',
                   backdropFilter: 'blur(8px)',
-                  maxWidth: '520px',
-                  lineHeight: 1.5,
+                  maxWidth: '300px',
+                  lineHeight: 1.4,
                   display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+                  alignItems: 'flex-start',
+                  gap: '8px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
                 }}>
                   <div style={{ flex: 1, textAlign: 'left' }}>
                     <strong style={{ fontFamily: "var(--font-heading)", fontWeight: 600, display: 'block', marginBottom: 2 }}>

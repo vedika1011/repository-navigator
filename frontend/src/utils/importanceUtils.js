@@ -1,13 +1,12 @@
 // importanceUtils.js — Pure functions mapping importance score to visual properties.
 
 export function getNodeDimensions(importance) {
-  const clamped = Math.min(10, Math.max(1, importance || 5))
-  // Increased all widths by 20px, heights by 8px
-  if (clamped >= 9) return { width: 320, height: 110 }
-  if (clamped >= 7) return { width: 300, height: 100 }
-  if (clamped >= 5) return { width: 280, height: 90 }
-  if (clamped >= 3) return { width: 260, height: 80 }
-  return { width: 240, height: 70 }
+  const c = Math.min(10, Math.max(1, importance || 5))
+  if (c >= 9) return { width: 270, height: 92 }
+  if (c >= 7) return { width: 250, height: 84 }
+  if (c >= 5) return { width: 230, height: 76 }
+  if (c >= 3) return { width: 210, height: 68 }
+  return { width: 192, height: 62 }
 }
 
 export function getNodeBorderWidth(importance) {

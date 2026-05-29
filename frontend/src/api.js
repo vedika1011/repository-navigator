@@ -1,9 +1,10 @@
 // api.js — with full diagnostic logging
-const BACKEND_URL = "http://localhost:3001";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
+  || 'http://localhost:3001'
 
 export async function analyzeRepo(repoUrl) {
   console.log("[API] Sending request to backend:", repoUrl);
-  
+
   let response;
   try {
     response = await fetch(`${BACKEND_URL}/analyze`, {

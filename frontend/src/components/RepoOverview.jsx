@@ -37,11 +37,12 @@ function RepoOverview({ graphData, onGenerateOverview, isGenerating }) {
       }}
         onClick={() => setExpanded(prev => !prev)}
       >
-        {/* Left: repo info */}
+        {/* Main Header Content */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
           gap: 12,
+          width: '100%',
         }}>
           {/* GitHub icon */}
           <div style={{
@@ -61,36 +62,75 @@ function RepoOverview({ graphData, onGenerateOverview, isGenerating }) {
             </svg>
           </div>
 
-          {/* Repo name */}
-          <div>
+          {/* Repo name and Chevron container */}
+          <div style={{ flex: 1 }}>
             <div style={{
               display: 'flex',
-              alignItems: 'baseline',
-              gap: 6,
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              width: '100%',
             }}>
-              <span style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: 13,
-                color: 'var(--text-muted)',
+              {/* Name part */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: 6,
               }}>
-                {owner}
-              </span>
-              <span style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: 13,
-                color: 'var(--text-faint)',
+                <span style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 13,
+                  color: 'var(--text-muted)',
+                }}>
+                  {owner}
+                </span>
+                <span style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 13,
+                  color: 'var(--text-faint)',
+                }}>
+                  /
+                </span>
+                <span style={{
+                  fontFamily: "var(--font-heading)",
+                  fontWeight: 700,
+                  fontSize: 18,
+                  color: 'var(--text-primary)',
+                }}>
+                  {repo}
+                </span>
+              </div>
+
+              {/* Right: AI badge + chevron */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
               }}>
-                /
-              </span>
-              <span style={{
-                fontFamily: "var(--font-heading)",
-                fontWeight: 700,
-                fontSize: 18,
-                color: 'var(--text-primary)',
-              }}>
-                {repo}
-              </span>
+                {hasOverview && (
+                  <span style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 9,
+                    color: 'var(--success)',
+                    background: 'rgba(74, 222, 128, 0.1)',
+                    border: '1px solid rgba(74, 222, 128, 0.2)',
+                    borderRadius: 4,
+                    padding: '2px 7px',
+                  }}>
+                    ✦ AI Overview
+                  </span>
+                )}
+                <span style={{
+                  color: 'var(--text-faint)',
+                  fontSize: 12,
+                  transition: 'transform 200ms ease',
+                  display: 'inline-block',
+                  transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)',
+                }}>
+                  ▼
+                </span>
+              </div>
             </div>
+
             <div style={{
               fontFamily: "var(--font-mono)",
               fontSize: 10,
@@ -100,36 +140,6 @@ function RepoOverview({ graphData, onGenerateOverview, isGenerating }) {
               {totalFiles} files · {totalEdges} dependencies · {analyzedAt}
             </div>
           </div>
-        </div>
-
-        {/* Right: AI badge + chevron */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-        }}>
-          {hasOverview && (
-            <span style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: 9,
-              color: 'var(--success)',
-              background: 'rgba(74, 222, 128, 0.1)',
-              border: '1px solid rgba(74, 222, 128, 0.2)',
-              borderRadius: 4,
-              padding: '2px 7px',
-            }}>
-              ✦ AI Overview
-            </span>
-          )}
-          <span style={{
-            color: 'var(--text-faint)',
-            fontSize: 12,
-            transition: 'transform 200ms ease',
-            display: 'inline-block',
-            transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)',
-          }}>
-            ▼
-          </span>
         </div>
       </div>
 
